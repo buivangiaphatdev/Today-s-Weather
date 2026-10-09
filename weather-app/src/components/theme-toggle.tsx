@@ -1,12 +1,13 @@
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { useTheme } from "../context/theme-provider";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={`flex items-center cursor-pointer transition-transform duration-500 ${
         isDark ? "rotate-180" : "rotate-0"
@@ -18,6 +19,6 @@ export function ThemeToggle() {
         <Moon className="h-6 w-6 text-blue-500 rotate-0 transition-all" />
       )}
       <span className="sr-only">Toggle theme</span>
-    </div>
+    </button>
   );
 }
