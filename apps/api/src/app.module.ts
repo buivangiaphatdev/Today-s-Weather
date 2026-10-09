@@ -1,8 +1,13 @@
 import { Module, RequestMethod } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { LoggerModule } from "nestjs-pino";
 import { type Env, validateEnv } from "./config/env";
+import { GeoModule } from "./geo/geo.module";
+import { BURST_LIMIT, SUSTAINED_LIMIT } from "./throttle/rate-limits";
+import { WeatherModule } from "./weather/weather.module";
 
 @Module({
   imports: [
@@ -31,6 +36,14 @@ import { type Env, validateEnv } from "./config/env";
         },
       }),
     }),
+    // In-memory counters: fine for a single instance; move to Redis when scaling out
+    ThrottlerModule.forRoot({
+      throttlers: [BURST_LIMIT, SUSTAINED_LIMIT],
+      errorMessage: "Too many requests, please slow down",
+    }),
+    WeatherModule,
+    GeoModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

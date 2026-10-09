@@ -116,6 +116,24 @@ Bên trong `apps/web/`:
 - Bật/tắt theme (Light/Dark) bằng nút toggle.
 - Cho phép truy cập vị trí (geolocation) để tự động hiển thị weather tại vị trí hiện tại.
 
+API backend (`apps/api`)
+
+Proxy tới OpenWeather: API key chỉ nằm ở server, response chỉ giữ các field app dùng (type trong `packages/shared`). Đơn vị metric.
+
+| Endpoint                    | Query                              | Trả về                              |
+| --------------------------- | ---------------------------------- | ----------------------------------- |
+| `GET /api/weather/current`  | `lat` (-90..90), `lon` (-180..180) | `WeatherData`                       |
+| `GET /api/weather/forecast` | `lat`, `lon`                       | `ForecastData` (5 ngày, bước 3 giờ) |
+| `GET /api/geo/search`       | `q` (2–100 ký tự)                  | `GeocodingResponse[]` (tối đa 5)    |
+| `GET /api/geo/reverse`      | `lat`, `lon`                       | `GeocodingResponse[]` (0 hoặc 1)    |
+
+Mã lỗi:
+
+- `400` query sai, kèm `errors` theo từng field (không gọi OpenWeather)
+- `404` OpenWeather không tìm thấy vị trí
+- `429` vượt rate limit theo IP: 20 request/giây và 120 request/phút (header `Retry-After-burst` / `Retry-After-sustained`)
+- `502` OpenWeather lỗi hoặc từ chối key · `503` hết quota OpenWeather · `504` OpenWeather quá 5 giây không trả lời
+
 6. API Documentation (Frontend sử dụng OpenWeatherMap)
 
 Ứng dụng gọi OpenWeatherMap; cấu hình nằm ở `src/api/config.ts`:

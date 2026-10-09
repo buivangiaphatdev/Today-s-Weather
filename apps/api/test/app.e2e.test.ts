@@ -1,4 +1,5 @@
 import type { INestApplication } from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -11,7 +12,9 @@ describe("HTTP pipeline", () => {
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = configureApp(moduleRef.createNestApplication({ bufferLogs: true }));
+    app = configureApp(
+      moduleRef.createNestApplication<NestExpressApplication>({ bufferLogs: true }),
+    );
     await app.init();
   });
 
