@@ -12,6 +12,10 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
+  server: {
+    // Local dev: same-origin /api calls go to the NestJS API (pnpm --filter api dev)
+    proxy: { "/api": "http://localhost:3000" },
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],

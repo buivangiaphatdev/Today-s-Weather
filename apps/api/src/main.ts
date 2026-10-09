@@ -15,7 +15,7 @@ async function bootstrap() {
   const config = app.get<ConfigService<Env, true>>(ConfigService);
   const port = config.get("PORT", { infer: true });
   await app.listen(port);
-  Logger.log(`API listening on http://localhost:${port}/api`, "Bootstrap");
+  Logger.log(`API listening on port ${port}`, "Bootstrap");
 }
 
 void bootstrap();

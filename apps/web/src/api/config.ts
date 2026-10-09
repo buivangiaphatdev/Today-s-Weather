@@ -1,9 +1,3 @@
-export const API_CONFIG = {
-  BASE_URL: "https://api.openweathermap.org/data/2.5",
-  GEO: "https://api.openweathermap.org/geo/1.0",
-  API_KEY: import.meta.env.VITE_OPENWEATHER_API_KEY,
-  DEFAULT_PARAMS: {
-    units: "metric",
-    appid: import.meta.env.VITE_OPENWEATHER_API_KEY,
-  },
-};
+// Base URL of the backend. Empty in local dev: Vite proxies /api to localhost:3000
+// (see vite.config.ts). On Vercel it is the API deployment, e.g. https://x.vercel.app
+export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(/\/+$/, "");

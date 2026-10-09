@@ -56,13 +56,9 @@ pnpm install
 
 3. Tạo file biến môi trường
 
-Tạo file `apps/web/.env` với nội dung:
-
-```
-VITE_OPENWEATHER_API_KEY=your_openweather_api_key_here
-```
-
 Backend: copy `apps/api/.env.example` thành `apps/api/.env` rồi điền `OPENWEATHER_API_KEY`. API kiểm tra env khi khởi động (Zod) và dừng ngay nếu thiếu hoặc sai.
+
+Frontend không cần API key. Ở local để trống `VITE_API_URL` (hoặc không tạo `apps/web/.env`): Vite proxy `/api` sang `http://localhost:3000`, nên cần chạy cả API (`pnpm dev` chạy cả hai).
 
 4. Chạy
 
@@ -134,25 +130,13 @@ Mã lỗi:
 - `429` vượt rate limit theo IP: 20 request/giây và 120 request/phút (header `Retry-After-burst` / `Retry-After-sustained`)
 - `502` OpenWeather lỗi hoặc từ chối key · `503` hết quota OpenWeather · `504` OpenWeather quá 5 giây không trả lời
 
-6. API Documentation (Frontend sử dụng OpenWeatherMap)
+6. Deploy (Vercel, 2 project từ cùng repo)
 
-Ứng dụng gọi OpenWeatherMap; cấu hình nằm ở `src/api/config.ts`:
+| Project | Root Directory | Build                                                               | Biến môi trường                                                |
+| ------- | -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
+| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview) |
+| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`         |
 
-- `BASE_URL`: `https://api.openweathermap.org/data/2.5`
-- `GEO`: `http://api.openweathermap.org/geo/1.0`
-- `API_KEY`: lấy từ `import.meta.env.VITE_OPENWEATHER_API_KEY`
-
-Các endpoint thường dùng (ví dụ):
-
-- Geocoding (tìm toạ độ theo tên thành phố):
-
-  - `GET http://api.openweathermap.org/geo/1.0/direct?q={city name}&limit=1&appid={API key}`
-
-- Current weather / One Call (dự báo):
-  - `GET https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&appid={API key}`
-  - `GET https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=metric&appid={API key}` (nếu dùng)
-
-Lưu ý API:
-
-- Thay `{API key}` bằng giá trị `VITE_OPENWEATHER_API_KEY`.
-- Hạn chế rate-limit: dùng caching (react-query) và tránh gọi API quá thường xuyên.
+- Web gọi thẳng domain API (không rewrite qua Vercel): Vercel ghi đè `X-Forwarded-For` khi proxy, rate limit sẽ chỉ thấy 1 IP.
+- `CORS_ORIGINS` của API: domain production của web + pattern preview, ví dụ `https://today-s-weather-chi.vercel.app,https://today-s-weather-*-buivangiaphats-projects.vercel.app`.
+- Merge vào `main` → cả 2 project tự deploy production.

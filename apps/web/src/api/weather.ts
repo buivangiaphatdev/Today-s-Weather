@@ -1,55 +1,51 @@
-import { API_CONFIG } from "./config";
+import { API_BASE_URL } from "./config";
 import type { Coordinates, ForecastData, GeocodingResponse, WeatherData } from "./types";
 
+// Thrown for non-2xx responses; `message` is the API's own message (safe to show)
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+  }
+}
+
 class WeatherAPI {
-  private createURL(endpoint: string, params: Record<string, string | number>) {
-    const searchParams = new URLSearchParams({
-      appid: API_CONFIG.API_KEY,
-      ...params,
-    });
-    return `${endpoint}?${searchParams.toString()}`;
+  private createURL(path: string, params: Record<string, string | number>) {
+    const searchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) searchParams.set(key, String(value));
+    return `${API_BASE_URL}/api${path}?${searchParams.toString()}`;
   }
 
   private async fetchData<T>(url: string): Promise<T> {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(`Weather API Error ${response.status}`);
+      const body = (await response.json().catch(() => null)) as { message?: unknown } | null;
+      const message =
+        typeof body?.message === "string" ? body.message : `Weather API error ${response.status}`;
+      throw new ApiError(response.status, message);
     }
 
     return response.json();
   }
-  async getCurrentWreather({ lat, lon }: Coordinates): Promise<WeatherData> {
-    const url = this.createURL(`${API_CONFIG.BASE_URL}/weather`, {
-      lat: lat.toString(),
-      lon: lon.toString(),
-      units: API_CONFIG.DEFAULT_PARAMS.units,
-    });
-    return this.fetchData<WeatherData>(url);
-  }
-  async getForecast({ lat, lon }: Coordinates): Promise<ForecastData> {
-    const url = this.createURL(`${API_CONFIG.BASE_URL}/forecast`, {
-      lat: lat.toString(),
-      lon: lon.toString(),
-      units: API_CONFIG.DEFAULT_PARAMS.units,
-    });
-    return this.fetchData<ForecastData>(url);
-  }
-  async reverseGeocode({ lat, lon }: Coordinates): Promise<GeocodingResponse[]> {
-    const url = this.createURL(`${API_CONFIG.GEO}/reverse`, {
-      lat: lat.toString(),
-      lon: lon.toString(),
-      limit: 1,
-    });
-    return this.fetchData<GeocodingResponse[]>(url);
+
+  getCurrentWeather({ lat, lon }: Coordinates): Promise<WeatherData> {
+    return this.fetchData<WeatherData>(this.createURL("/weather/current", { lat, lon }));
   }
 
-  async searchLocations(query: string): Promise<GeocodingResponse[]> {
-    const url = this.createURL(`${API_CONFIG.GEO}/direct`, {
-      q: query,
-      limit: 5,
-    });
-    return this.fetchData<GeocodingResponse[]>(url);
+  getForecast({ lat, lon }: Coordinates): Promise<ForecastData> {
+    return this.fetchData<ForecastData>(this.createURL("/weather/forecast", { lat, lon }));
+  }
+
+  reverseGeocode({ lat, lon }: Coordinates): Promise<GeocodingResponse[]> {
+    return this.fetchData<GeocodingResponse[]>(this.createURL("/geo/reverse", { lat, lon }));
+  }
+
+  searchLocations(query: string): Promise<GeocodingResponse[]> {
+    return this.fetchData<GeocodingResponse[]>(this.createURL("/geo/search", { q: query }));
   }
 }
 

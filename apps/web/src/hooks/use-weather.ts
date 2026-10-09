@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { Coordinates } from "../api/types";
 import { weatherAPI } from "../api/weather";
+import { useDebouncedValue } from "./use-debounced-value";
 
 export const WEATHER_KEYS = {
   weather: (coords: Coordinates) => ["weather", coords] as const,
@@ -12,7 +13,7 @@ export const WEATHER_KEYS = {
 export function useWeatherQuery(coordinates: Coordinates | null) {
   return useQuery({
     queryKey: WEATHER_KEYS.weather(coordinates ?? { lat: 0, lon: 0 }),
-    queryFn: () => (coordinates ? weatherAPI.getCurrentWreather(coordinates) : null),
+    queryFn: () => (coordinates ? weatherAPI.getCurrentWeather(coordinates) : null),
     enabled: !!coordinates,
   });
 }
@@ -33,10 +34,15 @@ export function useReverseGeocodeQuery(coordinates: Coordinates | null) {
   });
 }
 
+// Wait for a pause in typing before searching: one request per word instead of per key
+export const SEARCH_DEBOUNCE_MS = 300;
+
 export function useLocationSearch(query: string) {
+  const debouncedQuery = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
+
   return useQuery({
-    queryKey: WEATHER_KEYS.search(query),
-    queryFn: () => weatherAPI.searchLocations(query),
-    enabled: query.length >= 3,
+    queryKey: WEATHER_KEYS.search(debouncedQuery),
+    queryFn: () => weatherAPI.searchLocations(debouncedQuery),
+    enabled: debouncedQuery.length >= 3,
   });
 }
