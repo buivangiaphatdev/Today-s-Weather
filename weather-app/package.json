@@ -12,7 +12,8 @@
     "format:check": "prettier --check .",
     "prepare": "cd .. && husky weather-app/.husky",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "progress": "node scripts/progress.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
