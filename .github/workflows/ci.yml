@@ -10,25 +10,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  web:
-    name: Lint, test & build (web)
+  ci:
+    name: Lint, test & build
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: weather-app
     env:
       HUSKY: 0 # git hooks are for local commits only
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4 # version comes from "packageManager" in package.json
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: weather-app/package-lock.json
+          cache: pnpm
 
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run format:check
-      - run: npm run test:run
-      - run: npm run build
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm turbo run lint typecheck test:run build
