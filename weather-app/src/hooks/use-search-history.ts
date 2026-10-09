@@ -13,10 +13,7 @@ interface SearchHistoryItem {
 }
 
 export function useSearchHistory() {
-  const [history, setHistory] = useLocalStorage<SearchHistoryItem[]>(
-    "search-history",
-    []
-  );
+  const [history, setHistory] = useLocalStorage<SearchHistoryItem[]>("search-history", []);
   const queryClient = useQueryClient();
 
   const historyQuery = useQuery({
@@ -26,9 +23,7 @@ export function useSearchHistory() {
   });
 
   const addToHistory = useMutation({
-    mutationFn: async (
-      search: Omit<SearchHistoryItem, "id" | "searchedAt">
-    ) => {
+    mutationFn: async (search: Omit<SearchHistoryItem, "id" | "searchedAt">) => {
       const newSearch: SearchHistoryItem = {
         ...search,
         id: `${search.lat}-${search.lon}-${Date.now()}`,
@@ -37,7 +32,7 @@ export function useSearchHistory() {
 
       // Remove duplicates and keep only last 10 searches
       const filteredHistory = history.filter(
-        (item) => !(item.lat === search.lat && item.lon === search.lon)
+        (item) => !(item.lat === search.lat && item.lon === search.lon),
       );
       const newHistory = [newSearch, ...filteredHistory].slice(0, 10);
 

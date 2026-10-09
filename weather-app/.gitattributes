@@ -1,0 +1,4 @@
+# Always use LF line endings so Prettier checks pass on every OS
+* text=auto eol=lf
+*.png binary
+*.svg text eol=lf

@@ -21,25 +21,28 @@ interface DailyForecast {
 }
 export function WeatherForecast({ data }: WeatherForecastProps) {
   // Group forecast by day and get daily min/max
-  const dailyForecasts = data.list.reduce((acc, forecast) => {
-    const date = format(new Date(forecast.dt * 1000), "yyyy-MM-dd");
+  const dailyForecasts = data.list.reduce(
+    (acc, forecast) => {
+      const date = format(new Date(forecast.dt * 1000), "yyyy-MM-dd");
 
-    if (!acc[date]) {
-      acc[date] = {
-        temp_min: forecast.main.temp_min,
-        temp_max: forecast.main.temp_max,
-        humidity: forecast.main.humidity,
-        wind: forecast.wind.speed,
-        weather: forecast.weather[0],
-        date: forecast.dt,
-      };
-    } else {
-      acc[date].temp_min = Math.min(acc[date].temp_min, forecast.main.temp_min);
-      acc[date].temp_max = Math.max(acc[date].temp_max, forecast.main.temp_max);
-    }
+      if (!acc[date]) {
+        acc[date] = {
+          temp_min: forecast.main.temp_min,
+          temp_max: forecast.main.temp_max,
+          humidity: forecast.main.humidity,
+          wind: forecast.wind.speed,
+          weather: forecast.weather[0],
+          date: forecast.dt,
+        };
+      } else {
+        acc[date].temp_min = Math.min(acc[date].temp_min, forecast.main.temp_min);
+        acc[date].temp_max = Math.max(acc[date].temp_max, forecast.main.temp_max);
+      }
 
-    return acc;
-  }, {} as Record<string, DailyForecast>);
+      return acc;
+    },
+    {} as Record<string, DailyForecast>,
+  );
 
   // Get next 5 days
   const nextDays = Object.values(dailyForecasts).slice(1, 6);
@@ -60,9 +63,7 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
               className="grid grid-cols-3 items-center gap-4 rounded-lg border p-4"
             >
               <div>
-                <p className="font-medium">
-                  {format(new Date(day.date * 1000), "EEE, MMM d")}
-                </p>
+                <p className="font-medium">{format(new Date(day.date * 1000), "EEE, MMM d")}</p>
                 <p className="text-sm text-muted-foreground capitalize">
                   {day.weather.description}
                 </p>

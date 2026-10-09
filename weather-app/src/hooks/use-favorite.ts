@@ -12,10 +12,7 @@ export interface FavoriteCity {
 }
 
 export function useFavorites() {
-  const [favorites, setFavorites] = useLocalStorage<FavoriteCity[]>(
-    "favorites",
-    []
-  );
+  const [favorites, setFavorites] = useLocalStorage<FavoriteCity[]>("favorites", []);
   const queryClient = useQueryClient();
 
   const favoritesQuery = useQuery({

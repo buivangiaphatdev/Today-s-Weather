@@ -1,6 +1,15 @@
-import { useState } from "react"
-import { Button } from "./ui/button"
-import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "./ui/command"
+import { useState } from "react";
+import { Button } from "./ui/button";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "./ui/command";
 import { Clock, Loader2, Search, Star, XCircle } from "lucide-react";
 import { useLocationSearch } from "../hooks/use-weather";
 import { useNavigate } from "react-router-dom";
@@ -45,15 +54,9 @@ const CitySearch = () => {
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <Command>
-          <CommandInput
-            placeholder="Search cities..."
-            value={query}
-            onValueChange={setQuery}
-          />
+          <CommandInput placeholder="Search cities..." value={query} onValueChange={setQuery} />
           <CommandList>
-            {query.length > 2 && !isLoading && (
-              <CommandEmpty>No cities found.</CommandEmpty>
-            )}
+            {query.length > 2 && !isLoading && <CommandEmpty>No cities found.</CommandEmpty>}
 
             {/* Favorites Section */}
             {favorites.length > 0 && (
@@ -67,13 +70,9 @@ const CitySearch = () => {
                     <Star className="mr-2 h-4 w-4 text-yellow-500" />
                     <span>{city.name}</span>
                     {city.state && (
-                      <span className="text-sm text-muted-foreground">
-                        , {city.state}
-                      </span>
+                      <span className="text-sm text-muted-foreground">, {city.state}</span>
                     )}
-                    <span className="text-sm text-muted-foreground">
-                      , {city.country}
-                    </span>
+                    <span className="text-sm text-muted-foreground">, {city.country}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -84,15 +83,9 @@ const CitySearch = () => {
               <>
                 <CommandSeparator />
                 <CommandGroup>
-                  <div className="flex items-center justify-between px-2 my-2">
-                    <p className="text-xs text-muted-foreground">
-                      Recent Searches
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => clearHistory.mutate()}
-                    >
+                  <div className="my-2 flex items-center justify-between px-2">
+                    <p className="text-xs text-muted-foreground">Recent Searches</p>
+                    <Button variant="ghost" size="sm" onClick={() => clearHistory.mutate()}>
                       <XCircle className="h-4 w-4" />
                       Clear
                     </Button>
@@ -106,13 +99,9 @@ const CitySearch = () => {
                       <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
                       <span>{item.name}</span>
                       {item.state && (
-                        <span className="text-sm text-muted-foreground">
-                          , {item.state}
-                        </span>
+                        <span className="text-sm text-muted-foreground">, {item.state}</span>
                       )}
-                      <span className="text-sm text-muted-foreground">
-                        , {item.country}
-                      </span>
+                      <span className="text-sm text-muted-foreground">, {item.country}</span>
                       <span className="ml-auto text-xs text-muted-foreground">
                         {format(item.searchedAt, "MMM d, h:mm a")}
                       </span>
@@ -140,13 +129,9 @@ const CitySearch = () => {
                     <Search className="mr-2 h-4 w-4" />
                     <span>{location.name}</span>
                     {location.state && (
-                      <span className="text-sm text-muted-foreground">
-                        , {location.state}
-                      </span>
+                      <span className="text-sm text-muted-foreground">, {location.state}</span>
                     )}
-                    <span className="text-sm text-muted-foreground">
-                      , {location.country}
-                    </span>
+                    <span className="text-sm text-muted-foreground">, {location.country}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -155,7 +140,7 @@ const CitySearch = () => {
         </Command>
       </CommandDialog>
     </>
-  )
-}
+  );
+};
 
-export default CitySearch
+export default CitySearch;
