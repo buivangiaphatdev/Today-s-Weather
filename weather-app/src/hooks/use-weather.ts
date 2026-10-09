@@ -12,8 +12,7 @@ export const WEATHER_KEYS = {
 export function useWeatherQuery(coordinates: Coordinates | null) {
   return useQuery({
     queryKey: WEATHER_KEYS.weather(coordinates ?? { lat: 0, lon: 0 }),
-    queryFn: () =>
-      coordinates ? weatherAPI.getCurrentWreather(coordinates) : null,
+    queryFn: () => (coordinates ? weatherAPI.getCurrentWreather(coordinates) : null),
     enabled: !!coordinates,
   });
 }
@@ -29,8 +28,7 @@ export function useForecastQuery(coordinates: Coordinates | null) {
 export function useReverseGeocodeQuery(coordinates: Coordinates | null) {
   return useQuery({
     queryKey: WEATHER_KEYS.location(coordinates ?? { lat: 0, lon: 0 }),
-    queryFn: () =>
-      coordinates ? weatherAPI.reverseGeocode(coordinates) : null,
+    queryFn: () => (coordinates ? weatherAPI.reverseGeocode(coordinates) : null),
     enabled: !!coordinates,
   });
 }

@@ -62,7 +62,6 @@ Tạo file `.env` ở gốc dự án với nội dung:
 VITE_OPENWEATHER_API_KEY=your_openweather_api_key_here
 ```
 
-
 4. Cấu trúc thư mục (Folder Structure)
 
 Tóm tắt cấu trúc chính (chỉ liệt kê các file/folder quan trọng):
@@ -119,5 +118,3 @@ Lưu ý API:
 
 - Thay `{API key}` bằng giá trị `VITE_OPENWEATHER_API_KEY`.
 - Hạn chế rate-limit: dùng caching (react-query) và tránh gọi API quá thường xuyên.
-
-

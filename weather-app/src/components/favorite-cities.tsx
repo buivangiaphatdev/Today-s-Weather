@@ -15,13 +15,7 @@ interface FavoriteCityTabletProps {
   onRemove: (id: string) => void;
 }
 
-function FavoriteCityTablet({
-  id,
-  name,
-  lat,
-  lon,
-  onRemove,
-}: FavoriteCityTabletProps) {
+function FavoriteCityTablet({ id, name, lat, lon, onRemove }: FavoriteCityTabletProps) {
   const navigate = useNavigate();
   const { data: weather, isLoading } = useWeatherQuery({ lat, lon });
 
@@ -39,7 +33,7 @@ function FavoriteCityTablet({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute right-1 top-1 h-6 w-6 rounded-full p-0  hover:text-destructive-foreground group-hover:opacity-100"
+        className="hover:text-destructive-foreground absolute top-1 right-1 h-6 w-6 rounded-full p-0 group-hover:opacity-100"
         onClick={(e) => {
           e.stopPropagation();
           onRemove(id);
@@ -63,16 +57,12 @@ function FavoriteCityTablet({
             />
             <div>
               <p className="font-medium">{name}</p>
-              <p className="text-xs text-muted-foreground">
-                {weather.sys.country}
-              </p>
+              <p className="text-xs text-muted-foreground">{weather.sys.country}</p>
             </div>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-xl font-bold">
-              {Math.round(weather.main.temp)}°
-            </p>
-            <p className="text-xs capitalize text-muted-foreground">
+            <p className="text-xl font-bold">{Math.round(weather.main.temp)}°</p>
+            <p className="text-xs text-muted-foreground capitalize">
               {weather.weather[0].description}
             </p>
           </div>

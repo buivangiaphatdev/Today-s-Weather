@@ -1,8 +1,8 @@
-import { Toaster as Sonner, type ToasterProps } from "sonner"
-import { useTheme } from "@/context/theme-provider"
+import { Toaster as Sonner, type ToasterProps } from "sonner";
+import { useTheme } from "@/context/theme-provider";
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme } = useTheme()
+  const { theme } = useTheme();
 
   return (
     <Sonner
@@ -17,7 +17,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }
       {...props}
     />
-  )
-}
+  );
+};
 
-export { Toaster }
+export { Toaster };

@@ -1,6 +1,6 @@
-import { useParams, useSearchParams } from "react-router-dom"
+import { useParams, useSearchParams } from "react-router-dom";
 import { useForecastQuery, useWeatherQuery } from "../hooks/use-weather";
-import { Alert, AlertDescription } from "../components/ui/alert"
+import { Alert, AlertDescription } from "../components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import WeatherSkeleton from "../components/loading-skeleton";
 import CurrentWeather from "../components/current-weather";
@@ -24,9 +24,7 @@ const CityPage = () => {
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load weather data. Please try again.
-        </AlertDescription>
+        <AlertDescription>Failed to load weather data. Please try again.</AlertDescription>
       </Alert>
     );
   }
@@ -42,22 +40,20 @@ const CityPage = () => {
           {params.cityName}, {weatherQuery.data.sys.country}
         </h1>
         <div className="flex gap-2">
-          <FavoriteButton
-            data={{ ...weatherQuery.data, name: params.cityName }}
-          />
+          <FavoriteButton data={{ ...weatherQuery.data, name: params.cityName }} />
         </div>
       </div>
 
       <div className="grid gap-6">
         <CurrentWeather data={weatherQuery.data} />
         <HourlyTemperature data={forecastQuery.data} />
-        <div className="grid gap-6 md:grid-cols-2 items-start">
+        <div className="grid items-start gap-6 md:grid-cols-2">
           <WeatherDetails data={weatherQuery.data} />
           <WeatherForecast data={forecastQuery.data} />
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CityPage
+export default CityPage;

@@ -1,18 +1,17 @@
-import { AlertTriangle, MapPin, RefreshCw } from "lucide-react"
-import { Button } from "../components/ui/button"
-import { useGeolocation } from "../hooks/use-geolocation"
-import WeatherSkeleton from "../components/loading-skeleton"
-import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert"
-import { useForecastQuery, useReverseGeocodeQuery, useWeatherQuery } from "../hooks/use-weather"
-import CurrentWeather from "../components/current-weather"
-import WeatherDetails from "../components/weather-details"
-import { WeatherForecast } from "../components/weather-forecast"
-import { HourlyTemperature } from "../components/hourly-temprature"
-import { FavoriteCities } from "../components/favorite-cities"
-
+import { AlertTriangle, MapPin, RefreshCw } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { useGeolocation } from "../hooks/use-geolocation";
+import WeatherSkeleton from "../components/loading-skeleton";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { useForecastQuery, useReverseGeocodeQuery, useWeatherQuery } from "../hooks/use-weather";
+import CurrentWeather from "../components/current-weather";
+import WeatherDetails from "../components/weather-details";
+import { WeatherForecast } from "../components/weather-forecast";
+import { HourlyTemperature } from "../components/hourly-temprature";
+import { FavoriteCities } from "../components/favorite-cities";
 
 const WeatherDashboard = () => {
-   const {
+  const {
     coordinates,
     error: locationError,
     isLoading: locationLoading,
@@ -102,30 +101,23 @@ const WeatherDashboard = () => {
           onClick={handleRefresh}
           disabled={weatherQuery.isFetching || forecastQuery.isFetching}
         >
-          <RefreshCw
-            className={`h-4 w-4 ${
-              weatherQuery.isFetching ? "animate-spin" : ""
-            }`}
-          />
+          <RefreshCw className={`h-4 w-4 ${weatherQuery.isFetching ? "animate-spin" : ""}`} />
         </Button>
       </div>
 
       <div className="grid gap-6">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <CurrentWeather
-            data={weatherQuery.data}
-            locationName={locationName}
-          />
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <CurrentWeather data={weatherQuery.data} locationName={locationName} />
           <HourlyTemperature data={forecastQuery.data} />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 items-start">
+        <div className="grid items-start gap-6 md:grid-cols-2">
           <WeatherDetails data={weatherQuery.data} />
           <WeatherForecast data={forecastQuery.data} />
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default WeatherDashboard
+export default WeatherDashboard;

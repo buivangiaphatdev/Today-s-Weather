@@ -1,10 +1,5 @@
 import { API_CONFIG } from "./config";
-import type {
-  Coordinates,
-  ForecastData,
-  GeocodingResponse,
-  WeatherData,
-} from "./types";
+import type { Coordinates, ForecastData, GeocodingResponse, WeatherData } from "./types";
 
 class WeatherAPI {
   private createURL(endpoint: string, params: Record<string, string | number>) {
@@ -49,9 +44,9 @@ class WeatherAPI {
     return this.fetchData<GeocodingResponse[]>(url);
   }
 
-   async searchLocations(query:string): Promise<GeocodingResponse[]> {
+  async searchLocations(query: string): Promise<GeocodingResponse[]> {
     const url = this.createURL(`${API_CONFIG.GEO}/direct`, {
-      q:query,
+      q: query,
       limit: 5,
     });
     return this.fetchData<GeocodingResponse[]>(url);
