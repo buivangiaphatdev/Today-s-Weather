@@ -62,6 +62,8 @@ Tạo file `apps/web/.env` với nội dung:
 VITE_OPENWEATHER_API_KEY=your_openweather_api_key_here
 ```
 
+Backend: copy `apps/api/.env.example` thành `apps/api/.env` rồi điền `OPENWEATHER_API_KEY`. API kiểm tra env khi khởi động (Zod) và dừng ngay nếu thiếu hoặc sai.
+
 4. Chạy
 
 ```powershell
@@ -70,7 +72,8 @@ pnpm build        # build mọi app (có cache Turborepo)
 pnpm lint         # lint
 pnpm test         # chạy test một lần
 pnpm format       # format code bằng Prettier
-pnpm --filter web dev   # chỉ chạy app web
+pnpm --filter web dev   # chỉ chạy app web (http://localhost:5173)
+pnpm --filter api dev   # chỉ chạy API (http://localhost:3000/api)
 ```
 
 Cấu trúc thư mục (Folder Structure)
@@ -78,7 +81,7 @@ Cấu trúc thư mục (Folder Structure)
 Monorepo dùng pnpm workspaces + Turborepo:
 
 - `apps/web/` — frontend React (Vite)
-- `apps/api/` — backend NestJS (từ P1-03)
+- `apps/api/` — backend NestJS 11 (config + Zod, pino logger, helmet, CORS)
 - `packages/shared/` — type / schema dùng chung giữa web và api
 
 Bên trong `apps/web/`:
