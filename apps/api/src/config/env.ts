@@ -21,6 +21,10 @@ export const envSchema = z.object({
     )
     .pipe(z.array(origin).min(1)),
   OPENWEATHER_API_KEY: z.string().min(1),
+  // Number of reverse proxies in front of the API (Railway/Render: 1). Needed so
+  // req.ip is the real client IP for rate limiting. Keep 0 when not behind a proxy,
+  // otherwise clients could spoof X-Forwarded-For to dodge the limit.
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
 });
 
 export type Env = z.infer<typeof envSchema>;

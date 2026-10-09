@@ -11,6 +11,7 @@ describe("validateEnv", () => {
       LOG_LEVEL: "info",
       CORS_ORIGINS: ["http://localhost:5173"],
       OPENWEATHER_API_KEY: "key",
+      TRUST_PROXY: 0,
     });
   });
 
