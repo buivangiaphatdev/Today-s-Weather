@@ -1,0 +1,2 @@
+cd weather-app
+npx lint-staged
