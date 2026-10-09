@@ -28,3 +28,6 @@ dist-ssr
 .agents
 docs
 skills-lock.json
+
+# Vercel CLI local project link / build output
+.vercel

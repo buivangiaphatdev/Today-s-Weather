@@ -6,7 +6,7 @@ const base = { OPENWEATHER_API_KEY: "key" };
 describe("validateEnv", () => {
   it("applies defaults", () => {
     expect(validateEnv(base)).toEqual({
-      NODE_ENV: "development",
+      NODE_ENV: "production",
       PORT: 3000,
       LOG_LEVEL: "info",
       CORS_ORIGINS: ["http://localhost:5173"],
@@ -35,6 +35,27 @@ describe("validateEnv", () => {
   it("rejects origins with a trailing slash, which browsers never send", () => {
     expect(() => validateEnv({ ...base, CORS_ORIGINS: "https://example.com/" })).toThrow(
       /CORS_ORIGINS/,
+    );
+  });
+
+  it("turns a single * into a one-label wildcard for preview deployments", () => {
+    const [pattern] = validateEnv({
+      ...base,
+      CORS_ORIGINS: "https://today-s-weather-*-team.vercel.app",
+    }).CORS_ORIGINS as RegExp[];
+
+    expect(pattern).toBeInstanceOf(RegExp);
+    expect(pattern.test("https://today-s-weather-git-feature-x-team.vercel.app")).toBe(true);
+    expect(pattern.test("https://today-s-weather-abc123-team.vercel.app")).toBe(true);
+    // Cannot be stretched across dots or to another scheme/domain
+    expect(pattern.test("https://today-s-weather-x.evil.com-team.vercel.app")).toBe(false);
+    expect(pattern.test("http://today-s-weather-abc-team.vercel.app")).toBe(false);
+    expect(pattern.test("https://today-s-weather--team.vercel.app")).toBe(false);
+  });
+
+  it("rejects more than one wildcard", () => {
+    expect(() => validateEnv({ ...base, CORS_ORIGINS: "https://*.*.vercel.app" })).toThrow(
+      /at most one/,
     );
   });
 
