@@ -62,12 +62,16 @@ Frontend không cần API key. Ở local để trống `VITE_API_URL` (hoặc kh
 
 4. Chạy
 
+Redis/Postgres local (cần Docker Desktop): `pnpm infra:up` rồi đặt `REDIS_URL=redis://127.0.0.1:6380` trong `apps/api/.env`. Cổng host là 6380/5433 để không đụng Redis/Postgres có sẵn trên máy hoặc trong WSL. Không có Redis thì API vẫn chạy, cache và rate limit nằm trong bộ nhớ.
+
 ```powershell
 pnpm dev          # chạy dev server của mọi app
 pnpm build        # build mọi app (có cache Turborepo)
 pnpm lint         # lint
 pnpm test         # chạy test một lần
 pnpm format       # format code bằng Prettier
+pnpm infra:up     # Redis (6380) + Postgres (5433) bằng docker compose
+pnpm infra:down   # tắt
 pnpm --filter web dev   # chỉ chạy app web (http://localhost:5173)
 pnpm --filter api dev   # chỉ chạy API (http://localhost:3000/api)
 ```
@@ -122,6 +126,9 @@ Proxy tới OpenWeather: API key chỉ nằm ở server, response chỉ giữ c�
 | `GET /api/weather/forecast` | `lat`, `lon`                       | `ForecastData` (5 ngày, bước 3 giờ) |
 | `GET /api/geo/search`       | `q` (2–100 ký tự)                  | `GeocodingResponse[]` (tối đa 5)    |
 | `GET /api/geo/reverse`      | `lat`, `lon`                       | `GeocodingResponse[]` (0 hoặc 1)    |
+| `GET /api/health`           |                                    | `{ status, uptimeSeconds, checks }` |
+
+Cache (Redis nếu có `REDIS_URL`, không thì bộ nhớ): current 10 phút, forecast 30 phút, geo 7 ngày; toạ độ làm tròn 2 chữ số (~1,1 km) trong key. Header `X-Cache: HIT | MISS`. Redis lỗi thì API vẫn trả lời (bỏ qua cache, đếm rate limit trong bộ nhớ) và `/api/health` báo `degraded`. Health không bị rate limit.
 
 Mã lỗi:
 
@@ -132,11 +139,11 @@ Mã lỗi:
 
 6. Deploy (Vercel, 2 project từ cùng repo)
 
-| Project | Root Directory | Build                                                               | Biến môi trường                                                |
-| ------- | -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
-| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview) |
-| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`         |
+| Project | Root Directory | Build                                                               | Biến môi trường                                                                           |
+| ------- | -------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview)                            |
+| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`, `REDIS_URL` (Upstash `rediss://`) |
 
 - Web gọi thẳng domain API (không rewrite qua Vercel): Vercel ghi đè `X-Forwarded-For` khi proxy, rate limit sẽ chỉ thấy 1 IP.
-- `CORS_ORIGINS` của API: domain production của web + pattern preview, ví dụ `https://today-s-weather-chi.vercel.app,https://today-s-weather-*-buivangiaphats-projects.vercel.app`.
+- `CORS_ORIGINS` của API: domain production của web + pattern preview, ví dụ `https://today-s-weather-web.vercel.app,https://today-s-weather-*-buivangiaphats-projects.vercel.app`.
 - Merge vào `main` → cả 2 project tự deploy production.

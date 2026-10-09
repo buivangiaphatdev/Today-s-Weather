@@ -13,7 +13,8 @@
     },
     "test:run": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"]
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "env": ["REDIS_TEST_URL"]
     },
     "dev": {
       "dependsOn": ["^build"],

@@ -1,0 +1,36 @@
+# Local infrastructure: `pnpm infra:up` / `pnpm infra:down`
+# Production uses managed services (Upstash Redis; Postgres from phase 2).
+# Host ports are shifted (6380, 5433) and bound to 127.0.0.1 so they never collide
+# with a Redis/Postgres already running on the machine or in WSL.
+services:
+  redis:
+    image: redis:7.4-alpine
+    # Cache + rate-limit counters only: no persistence needed
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Not used by the API yet (phase 2: users, favorites, history)
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: weather
+      POSTGRES_PASSWORD: weather
+      POSTGRES_DB: weather
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U weather -d weather"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
