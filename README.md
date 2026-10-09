@@ -39,32 +39,49 @@ Dev / Lint / Build tools:
 
 5. Cài đặt (Installation)
 
-Yêu cầu: Node.js >= 16, npm hoặc pnpm.
+Yêu cầu: Node.js >= 22, pnpm 10 (`corepack enable` hoặc `npm i -g pnpm@10.34.5`).
 
 1. Clone repository
 
 ```powershell
 git clone <repo-url>
-cd weather-app
+cd Today-s-Weather
 ```
 
-2. Cài dependencies
+2. Cài dependencies (cho toàn bộ monorepo)
 
 ```powershell
-npm install
+pnpm install
 ```
 
 3. Tạo file biến môi trường
 
-Tạo file `.env` ở gốc dự án với nội dung:
+Tạo file `apps/web/.env` với nội dung:
 
 ```
 VITE_OPENWEATHER_API_KEY=your_openweather_api_key_here
 ```
 
-4. Cấu trúc thư mục (Folder Structure)
+4. Chạy
 
-Tóm tắt cấu trúc chính (chỉ liệt kê các file/folder quan trọng):
+```powershell
+pnpm dev          # chạy dev server của mọi app
+pnpm build        # build mọi app (có cache Turborepo)
+pnpm lint         # lint
+pnpm test         # chạy test một lần
+pnpm format       # format code bằng Prettier
+pnpm --filter web dev   # chỉ chạy app web
+```
+
+Cấu trúc thư mục (Folder Structure)
+
+Monorepo dùng pnpm workspaces + Turborepo:
+
+- `apps/web/` — frontend React (Vite)
+- `apps/api/` — backend NestJS (từ P1-03)
+- `packages/shared/` — type / schema dùng chung giữa web và api
+
+Bên trong `apps/web/`:
 
 - `src/`
   - `main.tsx`, `App.tsx` — entry và layout chính

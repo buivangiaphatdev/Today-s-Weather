@@ -1,0 +1,29 @@
+{
+  "name": "todays-weather",
+  "private": true,
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test:run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "progress": "node scripts/progress.mjs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.9.9",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "turbo": "2.11.4"
+  },
+  "lint-staged": {
+    "*.{js,mjs,json,css,md,html,yml,yaml}": "prettier --write"
+  }
+}
