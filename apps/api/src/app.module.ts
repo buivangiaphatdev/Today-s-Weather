@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import type Redis from "ioredis";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { LoggerModule } from "nestjs-pino";
+import { CookieSpikeModule } from "./auth/cookie-spike.controller";
 import { CacheModule } from "./cache/cache.module";
 import { type Env, validateEnv } from "./config/env";
 import { GeoModule } from "./geo/geo.module";
@@ -55,6 +56,7 @@ import { WeatherModule } from "./weather/weather.module";
     WeatherModule,
     GeoModule,
     HealthModule,
+    CookieSpikeModule, // TEMPORARY (P2-00)
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
