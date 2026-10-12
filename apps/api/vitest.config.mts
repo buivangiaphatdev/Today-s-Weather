@@ -14,6 +14,9 @@ export default defineConfig({
       // Overrides any REDIS_URL from a local .env: tests use the in-memory store unless
       // they opt into a real Redis via REDIS_TEST_URL (test/redis.integration.test.ts)
       REDIS_URL: "",
+      // Unreachable on purpose: tests that need Postgres opt in with DATABASE_TEST_URL
+      // (test/db.integration.test.ts); the rest must not depend on a database
+      DATABASE_URL: "postgresql://unused:unused@127.0.0.1:1/unused_test",
     },
   },
 });

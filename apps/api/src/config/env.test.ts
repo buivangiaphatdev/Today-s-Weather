@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { validateEnv } from "./env";
 
-const base = { OPENWEATHER_API_KEY: "key" };
+const DATABASE_URL = "postgresql://weather:weather@127.0.0.1:5433/weather";
+const base = { OPENWEATHER_API_KEY: "key", DATABASE_URL };
 
 describe("validateEnv", () => {
   it("applies defaults", () => {
@@ -12,6 +13,7 @@ describe("validateEnv", () => {
       CORS_ORIGINS: ["http://localhost:5173"],
       OPENWEATHER_API_KEY: "key",
       TRUST_PROXY: 0,
+      DATABASE_URL,
     });
   });
 
@@ -29,7 +31,7 @@ describe("validateEnv", () => {
   });
 
   it("fails fast when the OpenWeather key is missing", () => {
-    expect(() => validateEnv({})).toThrow(/OPENWEATHER_API_KEY/);
+    expect(() => validateEnv({ DATABASE_URL })).toThrow(/OPENWEATHER_API_KEY/);
   });
 
   it("rejects origins with a trailing slash, which browsers never send", () => {
@@ -57,6 +59,11 @@ describe("validateEnv", () => {
     expect(() => validateEnv({ ...base, CORS_ORIGINS: "https://*.*.vercel.app" })).toThrow(
       /at most one/,
     );
+  });
+
+  it("requires a Postgres DATABASE_URL", () => {
+    expect(() => validateEnv({ OPENWEATHER_API_KEY: "key" })).toThrow(/DATABASE_URL/);
+    expect(() => validateEnv({ ...base, DATABASE_URL: "mysql://u:p@h/db" })).toThrow(/postgres/);
   });
 
   it("rejects an invalid port", () => {

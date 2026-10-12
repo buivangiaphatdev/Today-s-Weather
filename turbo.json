@@ -14,7 +14,7 @@
     "test:run": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "env": ["REDIS_TEST_URL"]
+      "env": ["REDIS_TEST_URL", "DATABASE_TEST_URL"]
     },
     "dev": {
       "dependsOn": ["^build"],

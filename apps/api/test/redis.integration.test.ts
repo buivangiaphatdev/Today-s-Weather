@@ -100,7 +100,8 @@ describe.skipIf(!url)("with a real Redis", () => {
     it("reports Redis up in health", async () => {
       const res = await request((await createApp()).getHttpServer()).get("/api/health");
 
-      expect(res.body).toMatchObject({ status: "ok", checks: { redis: { status: "up" } } });
+      // Overall status also depends on Postgres, which this suite does not provide
+      expect(res.body.checks.redis).toMatchObject({ status: "up" });
       expect(res.body.checks.redis.latencyMs).toBeGreaterThanOrEqual(0);
     });
   });

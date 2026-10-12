@@ -64,6 +64,8 @@ Frontend không cần API key. Ở local để trống `VITE_API_URL` (hoặc kh
 
 Redis/Postgres local (cần Docker Desktop): `pnpm infra:up` rồi đặt `REDIS_URL=redis://127.0.0.1:6380` trong `apps/api/.env`. Cổng host là 6380/5433 để không đụng Redis/Postgres có sẵn trên máy hoặc trong WSL. Không có Redis thì API vẫn chạy, cache và rate limit nằm trong bộ nhớ.
 
+Postgres (Prisma 7): `pnpm install` tự chạy `prisma generate`. Lần đầu: `pnpm --filter api db:migrate:deploy`. Test với DB thật: `DATABASE_TEST_URL=postgresql://weather:weather@127.0.0.1:5433/weather_test REDIS_TEST_URL=redis://127.0.0.1:6380 pnpm test` — test chỉ chạy trên database tên `*_test` và không bao giờ reset DB dev. Production: build trên Vercel tự `prisma migrate deploy` (chỉ môi trường production).
+
 ```powershell
 pnpm dev          # chạy dev server của mọi app
 pnpm build        # build mọi app (có cache Turborepo)
@@ -72,6 +74,9 @@ pnpm test         # chạy test một lần
 pnpm format       # format code bằng Prettier
 pnpm infra:up     # Redis (6380) + Postgres (5433) bằng docker compose
 pnpm infra:down   # tắt
+pnpm --filter api db:migrate          # tạo migration mới từ prisma/schema.prisma (dev)
+pnpm --filter api db:migrate:deploy   # áp dụng migration vào DB trong DATABASE_URL_UNPOOLED
+pnpm --filter api db:studio           # xem dữ liệu
 pnpm --filter web dev   # chỉ chạy app web (http://localhost:5173)
 pnpm --filter api dev   # chỉ chạy API (http://localhost:3000/api)
 ```
@@ -120,13 +125,13 @@ API backend (`apps/api`)
 
 Proxy tới OpenWeather: API key chỉ nằm ở server, response chỉ giữ các field app dùng (type trong `packages/shared`). Đơn vị metric.
 
-| Endpoint                    | Query                              | Trả về                              |
-| --------------------------- | ---------------------------------- | ----------------------------------- |
-| `GET /api/weather/current`  | `lat` (-90..90), `lon` (-180..180) | `WeatherData`                       |
-| `GET /api/weather/forecast` | `lat`, `lon`                       | `ForecastData` (5 ngày, bước 3 giờ) |
-| `GET /api/geo/search`       | `q` (2–100 ký tự)                  | `GeocodingResponse[]` (tối đa 5)    |
-| `GET /api/geo/reverse`      | `lat`, `lon`                       | `GeocodingResponse[]` (0 hoặc 1)    |
-| `GET /api/health`           |                                    | `{ status, uptimeSeconds, checks }` |
+| Endpoint                    | Query                              | Trả về                                                                          |
+| --------------------------- | ---------------------------------- | ------------------------------------------------------------------------------- |
+| `GET /api/weather/current`  | `lat` (-90..90), `lon` (-180..180) | `WeatherData`                                                                   |
+| `GET /api/weather/forecast` | `lat`, `lon`                       | `ForecastData` (5 ngày, bước 3 giờ)                                             |
+| `GET /api/geo/search`       | `q` (2–100 ký tự)                  | `GeocodingResponse[]` (tối đa 5)                                                |
+| `GET /api/geo/reverse`      | `lat`, `lon`                       | `GeocodingResponse[]` (0 hoặc 1)                                                |
+| `GET /api/health`           |                                    | `{ status, uptimeSeconds, checks: { postgres, redis } }` (503 khi Postgres sập) |
 
 Cache (Redis nếu có `REDIS_URL`, không thì bộ nhớ): current 10 phút, forecast 30 phút, geo 7 ngày; toạ độ làm tròn 2 chữ số (~1,1 km) trong key. Header `X-Cache: HIT | MISS`. Redis lỗi thì API vẫn trả lời (bỏ qua cache, đếm rate limit trong bộ nhớ) và `/api/health` báo `degraded`. Health không bị rate limit.
 

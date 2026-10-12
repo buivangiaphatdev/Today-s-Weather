@@ -4,9 +4,11 @@ packages:
 
 # pnpm 10 blocks dependency install scripts by default; allow only these
 onlyBuiltDependencies:
+  - "@prisma/engines" # downloads the schema engine used by prisma migrate
   - "@swc/core"
   - "@tailwindcss/oxide"
   - esbuild
+  - prisma
 
 # Only resolve versions published at least 14 days ago (minutes), so a freshly
 # hijacked release is usually caught and pulled before it reaches this repo
