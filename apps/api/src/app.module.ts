@@ -2,10 +2,15 @@ import { Module, RequestMethod } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import type Redis from "ioredis";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { LoggerModule } from "nestjs-pino";
+import { CacheModule } from "./cache/cache.module";
 import { type Env, validateEnv } from "./config/env";
 import { GeoModule } from "./geo/geo.module";
+import { HealthModule } from "./health/health.module";
+import { REDIS_CLIENT, RedisModule } from "./redis/redis.module";
+import { FailOpenThrottlerStorage } from "./throttle/fail-open-throttler-storage";
 import { BURST_LIMIT, SUSTAINED_LIMIT } from "./throttle/rate-limits";
 import { WeatherModule } from "./weather/weather.module";
 
@@ -36,13 +41,20 @@ import { WeatherModule } from "./weather/weather.module";
         },
       }),
     }),
-    // In-memory counters: fine for a single instance; move to Redis when scaling out
-    ThrottlerModule.forRoot({
-      throttlers: [BURST_LIMIT, SUSTAINED_LIMIT],
-      errorMessage: "Too many requests, please slow down",
+    RedisModule,
+    CacheModule,
+    // Counters in Redis when REDIS_URL is set (shared by all instances), else in memory
+    ThrottlerModule.forRootAsync({
+      inject: [REDIS_CLIENT],
+      useFactory: (redis: Redis | null) => ({
+        throttlers: [BURST_LIMIT, SUSTAINED_LIMIT],
+        errorMessage: "Too many requests, please slow down",
+        storage: new FailOpenThrottlerStorage(redis),
+      }),
     }),
     WeatherModule,
     GeoModule,
+    HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -41,6 +41,18 @@ export const envSchema = z.object({
   // so req.ip is the real client IP for rate limiting. Keep 0 when not behind a proxy,
   // otherwise clients could spoof X-Forwarded-For to dodge the limit.
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  // redis://localhost:6379 (docker compose) or rediss://... (Upstash). Optional: without
+  // it the cache and rate-limit counters live in memory, per instance.
+  REDIS_URL: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .string()
+      .refine(
+        (value) => URL.canParse(value) && ["redis:", "rediss:"].includes(new URL(value).protocol),
+        { message: "must be a redis:// or rediss:// URL" },
+      )
+      .optional(),
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;

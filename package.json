@@ -14,7 +14,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "progress": "node scripts/progress.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "infra:up": "docker compose up -d --wait",
+    "infra:down": "docker compose down"
   },
   "devDependencies": {
     "husky": "^9.1.7",

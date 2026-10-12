@@ -1,26 +1,30 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Query, Res } from "@nestjs/common";
 import type { Coordinates, GeocodingResponse } from "@weather/shared";
+import type { Response } from "express";
+import { sendCached } from "../common/cache-header";
 import { coordinatesQuery, type SearchQuery, searchQuery } from "../common/query-schemas";
 import { ZodValidationPipe } from "../common/zod-validation.pipe";
-import { OpenWeatherClient } from "../openweather/openweather.client";
+import { GeoService } from "./geo.service";
 
 @Controller("geo")
 export class GeoController {
-  constructor(private readonly openWeather: OpenWeatherClient) {}
+  constructor(private readonly geo: GeoService) {}
 
-  // GET /api/geo/search?q=Hanoi -> up to 5 matching places
+  // GET /api/geo/search?q=Hanoi -> up to 5 matching places (cached 7 days)
   @Get("search")
-  search(
+  async search(
     @Query(new ZodValidationPipe(searchQuery)) { q }: SearchQuery,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<GeocodingResponse[]> {
-    return this.openWeather.searchLocations(q);
+    return sendCached(res, await this.geo.search(q));
   }
 
-  // GET /api/geo/reverse?lat=21.03&lon=105.85 -> [] or [nearest place]
+  // GET /api/geo/reverse?lat=21.03&lon=105.85 -> [] or [nearest place] (cached 7 days)
   @Get("reverse")
-  reverse(
+  async reverse(
     @Query(new ZodValidationPipe(coordinatesQuery)) coords: Coordinates,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<GeocodingResponse[]> {
-    return this.openWeather.reverseGeocode(coords);
+    return sendCached(res, await this.geo.reverse(coords));
   }
 }

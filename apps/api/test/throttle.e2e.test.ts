@@ -44,7 +44,7 @@ describe("Rate limiting", () => {
     expect(limited).toHaveLength(5);
     // Header names carry the throttler name: Retry-After-burst, X-RateLimit-Remaining-burst, ...
     expect(Number(limited[0].headers["retry-after-burst"])).toBeGreaterThan(0);
-    // Blocked requests never reach OpenWeather, so they cost no quota
-    expect(fetchMock).toHaveBeenCalledTimes(limit);
+    // Identical concurrent requests share one cache load: a single OpenWeather call
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
