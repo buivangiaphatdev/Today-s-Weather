@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// Shared limits so the web UI and the API agree
+export const MAX_FAVORITES = 50;
+export const HISTORY_LIMIT = 10; // most recent searches kept per user
+
 // 4 decimals ≈ 11 m. Rounding before storing makes "same city" comparisons exact
 // (unique (user, lat, lon) in the database, favorite ids on the web).
 export const roundCoordinate = (value: number) => Math.round(value * 10_000) / 10_000;
@@ -19,7 +23,7 @@ export const favoriteInputSchema = placeSchema;
 export type FavoriteInput = z.infer<typeof favoriteInputSchema>;
 
 // POST /api/favorites/import: localStorage favorites pushed on first sign-in
-export const favoritesImportSchema = z.array(placeSchema).max(50);
+export const favoritesImportSchema = z.array(placeSchema).max(MAX_FAVORITES);
 export type FavoritesImportInput = z.infer<typeof favoritesImportSchema>;
 
 export const historyInputSchema = placeSchema.extend({

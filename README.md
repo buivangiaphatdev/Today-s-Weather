@@ -146,6 +146,19 @@ Auth (`/api/auth/*`):
 - Dùng lại refresh token đã xoay vòng (sau 30 giây) → thu hồi cả phiên (nghi bị đánh cắp).
 - Rate limit login/register: 5 lần/phút/IP và 10 lần/giờ/email.
 
+Dữ liệu người dùng (cần `Authorization: Bearer <accessToken>`, response `Cache-Control: private, no-store`):
+
+| Endpoint                         | Ghi chú                                                                             |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| `GET /api/me`                    | Profile                                                                             |
+| `GET` / `PATCH /api/me/settings` | `{ units: metric                                                                    | imperial, language: vi | en, theme: light | dark | system }`, PATCH nhận một phần |
+| `GET /api/favorites`             | Theo thứ tự thêm                                                                    |
+| `POST /api/favorites`            | 201 mới, 200 nếu đã có (cùng toạ độ làm tròn 4 chữ số); tối đa 50 (409)             |
+| `POST /api/favorites/import`     | Mảng thành phố từ localStorage, bỏ qua trùng, gọi lại an toàn; trả danh sách đầy đủ |
+| `DELETE /api/favorites/:id`      | 204; 404 nếu không phải của user                                                    |
+| `GET` / `POST /api/history`      | Mới nhất trước, giữ 10; tìm lại cùng địa điểm thì đưa lên đầu                       |
+| `DELETE /api/history`            | 204, xoá hết                                                                        |
+
 Cache (Redis nếu có `REDIS_URL`, không thì bộ nhớ): current 10 phút, forecast 30 phút, geo 7 ngày; toạ độ làm tròn 2 chữ số (~1,1 km) trong key. Header `X-Cache: HIT | MISS`. Redis lỗi thì API vẫn trả lời (bỏ qua cache, đếm rate limit trong bộ nhớ) và `/api/health` báo `degraded`. Health không bị rate limit.
 
 Mã lỗi:

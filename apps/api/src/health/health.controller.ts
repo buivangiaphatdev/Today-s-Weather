@@ -21,16 +21,17 @@ export interface HealthResponse {
   checks: { postgres: DependencyCheck; redis: DependencyCheck };
 }
 
-const PING_TIMEOUT_MS = 1000;
+// Neon (free) suspends after 5 idle minutes and takes ~1-3 s to wake on the next
+// query; a shorter Postgres timeout reported false "down" (503) on that first check
+const REDIS_TIMEOUT_MS = 1000;
+const POSTGRES_TIMEOUT_MS = 5000;
 
-async function timed(ping: () => Promise<unknown>): Promise<DependencyCheck> {
+async function timed(ping: () => Promise<unknown>, timeoutMs: number): Promise<DependencyCheck> {
   const startedAt = performance.now();
   try {
     await Promise.race([
       ping(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), PING_TIMEOUT_MS).unref(),
-      ),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs).unref()),
     ]);
     return { status: "up", latencyMs: Math.round(performance.now() - startedAt) };
   } catch {
@@ -53,9 +54,9 @@ export class HealthController {
   @Header("Cache-Control", "no-store")
   async check(@Res({ passthrough: true }) res: Response): Promise<HealthResponse> {
     const [postgres, redis] = await Promise.all([
-      timed(() => this.prisma.$queryRaw`SELECT 1`),
+      timed(() => this.prisma.$queryRaw`SELECT 1`, POSTGRES_TIMEOUT_MS),
       this.redis
-        ? timed(() => this.redis!.ping())
+        ? timed(() => this.redis!.ping(), REDIS_TIMEOUT_MS)
         : Promise.resolve<DependencyCheck>({ status: "disabled" }),
     ]);
 

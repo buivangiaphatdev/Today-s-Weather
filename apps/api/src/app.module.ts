@@ -10,6 +10,7 @@ import { CacheModule } from "./cache/cache.module";
 import { type Env, validateEnv } from "./config/env";
 import { GeoModule } from "./geo/geo.module";
 import { HealthModule } from "./health/health.module";
+import { UserDataModule } from "./me/user-data.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { REDIS_CLIENT, RedisModule } from "./redis/redis.module";
 import { FailOpenThrottlerStorage } from "./throttle/fail-open-throttler-storage";
@@ -64,6 +65,7 @@ import { WeatherModule } from "./weather/weather.module";
     GeoModule,
     HealthModule,
     AuthModule,
+    UserDataModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
