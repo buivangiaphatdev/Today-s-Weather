@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import CitySearch from "./city-search";
 import { ThemeToggle } from "./theme-toggle";
+import { AccountButton } from "./account-button";
 
 const Header = () => {
   return (
@@ -13,6 +14,7 @@ const Header = () => {
         <div className="flex gap-4">
           <CitySearch />
           <ThemeToggle />
+          <AccountButton />
         </div>
       </div>
     </header>

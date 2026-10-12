@@ -31,7 +31,8 @@ const CitySearch = () => {
 
     // Add to search history
     addToHistory.mutate({
-      query,
+      // Picking a favorite or a past search leaves the box empty: record the place name
+      query: query.trim() || name,
       name,
       lat: parseFloat(lat),
       lon: parseFloat(lon),

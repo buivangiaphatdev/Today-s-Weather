@@ -1,16 +1,8 @@
 import { API_BASE_URL } from "./config";
+import { toApiError } from "./http";
 import type { Coordinates, ForecastData, GeocodingResponse, WeatherData } from "./types";
 
-// Thrown for non-2xx responses; `message` is the API's own message (safe to show)
-export class ApiError extends Error {
-  readonly status: number;
-
-  constructor(status: number, message: string) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-  }
-}
+export { ApiError } from "./http";
 
 class WeatherAPI {
   private createURL(path: string, params: Record<string, string | number>) {
@@ -22,12 +14,7 @@ class WeatherAPI {
   private async fetchData<T>(url: string): Promise<T> {
     const response = await fetch(url);
 
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as { message?: unknown } | null;
-      const message =
-        typeof body?.message === "string" ? body.message : `Weather API error ${response.status}`;
-      throw new ApiError(response.status, message);
-    }
+    if (!response.ok) throw await toApiError(response);
 
     return response.json();
   }
