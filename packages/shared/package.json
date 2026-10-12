@@ -5,16 +5,27 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
-    "typecheck": "tsc --noEmit"
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.cjs.json && node scripts/mark-cjs.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:run": "vitest run"
   },
   "devDependencies": {
-    "typescript": "~5.8.3"
+    "@types/node": "^22.13.0",
+    "typescript": "~5.8.3",
+    "vitest": "^3.2.7"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
   }
 }

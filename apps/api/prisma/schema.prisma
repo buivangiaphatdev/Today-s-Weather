@@ -1,0 +1,104 @@
+// Connection URL lives in prisma.config.ts (Prisma 7); the app connects through
+// @prisma/adapter-pg in src/prisma/prisma.service.ts.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs" // NestJS 11 compiles to CommonJS
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Values match the Zod enums in @weather/shared (settings.ts)
+enum Units {
+  metric
+  imperial
+}
+
+enum Theme {
+  light
+  dark
+  system
+}
+
+model User {
+  id              String    @id @default(uuid(7)) @db.Uuid
+  // Always stored lowercased and trimmed (normalised by the shared Zod schema)
+  email           String    @unique
+  // Null for accounts that only sign in with Google (P2-04)
+  passwordHash    String?
+  name            String?   @db.VarChar(50)
+  emailVerifiedAt DateTime?
+  units           Units     @default(metric)
+  language        String    @default("vi") @db.VarChar(5)
+  theme           Theme     @default(system)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  favorites     FavoriteCity[]
+  searchHistory SearchHistory[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+// lat/lon are rounded to 4 decimals (~11 m) by the app before writing, so the
+// unique index reliably catches "same city twice"
+model FavoriteCity {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  userId    String   @db.Uuid
+  name      String   @db.VarChar(100)
+  country   String   @db.VarChar(10)
+  state     String?  @db.VarChar(100)
+  lat       Float
+  lon       Float
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lat, lon])
+  @@index([userId, createdAt])
+  @@map("favorite_cities")
+}
+
+// One row per place: searching the same place again updates searchedAt (dedupe).
+// The API keeps the latest 20 rows per user.
+model SearchHistory {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  userId     String   @db.Uuid
+  query      String   @db.VarChar(100)
+  name       String   @db.VarChar(100)
+  country    String   @db.VarChar(10)
+  state      String?  @db.VarChar(100)
+  lat        Float
+  lon        Float
+  searchedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lat, lon])
+  @@index([userId, searchedAt(sort: Desc)])
+  @@map("search_history")
+}
+
+// Opaque refresh tokens: only the SHA-256 hash is stored. Every refresh replaces the
+// token (rotation); presenting a replaced token again revokes the whole family.
+model RefreshToken {
+  id           String    @id @default(uuid(7)) @db.Uuid
+  userId       String    @db.Uuid
+  familyId     String    @db.Uuid
+  tokenHash    String    @unique @db.Char(64)
+  expiresAt    DateTime
+  revokedAt    DateTime?
+  replacedById String?   @unique @db.Uuid
+  userAgent    String?   @db.VarChar(255)
+  createdAt    DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}

@@ -10,6 +10,7 @@ import { CacheModule } from "./cache/cache.module";
 import { type Env, validateEnv } from "./config/env";
 import { GeoModule } from "./geo/geo.module";
 import { HealthModule } from "./health/health.module";
+import { PrismaModule } from "./prisma/prisma.module";
 import { REDIS_CLIENT, RedisModule } from "./redis/redis.module";
 import { FailOpenThrottlerStorage } from "./throttle/fail-open-throttler-storage";
 import { BURST_LIMIT, SUSTAINED_LIMIT } from "./throttle/rate-limits";
@@ -42,6 +43,7 @@ import { WeatherModule } from "./weather/weather.module";
         },
       }),
     }),
+    PrismaModule,
     RedisModule,
     CacheModule,
     // Counters in Redis when REDIS_URL is set (shared by all instances), else in memory

@@ -41,6 +41,15 @@ export const envSchema = z.object({
   // so req.ip is the real client IP for rate limiting. Keep 0 when not behind a proxy,
   // otherwise clients could spoof X-Forwarded-For to dodge the limit.
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  // Pooled connection used by the app (Neon: host contains "-pooler"). Migrations use
+  // DATABASE_URL_UNPOOLED via prisma.config.ts, not this schema.
+  DATABASE_URL: z
+    .string()
+    .refine(
+      (value) =>
+        URL.canParse(value) && ["postgres:", "postgresql:"].includes(new URL(value).protocol),
+      { message: "must be a postgres:// or postgresql:// URL" },
+    ),
   // redis://localhost:6379 (docker compose) or rediss://... (Upstash). Optional: without
   // it the cache and rate-limit counters live in memory, per instance.
   REDIS_URL: z.preprocess(

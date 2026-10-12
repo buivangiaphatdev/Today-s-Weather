@@ -6,6 +6,7 @@ import request from "supertest";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { AppModule } from "../src/app.module";
 import { configureApp } from "../src/app.setup";
+import { PrismaService } from "../src/prisma/prisma.service";
 import { REDIS_CLIENT } from "../src/redis/redis.module";
 import { jsonResponse, rawCurrentWeather, rawForecast, rawGeocoding } from "./fixtures/openweather";
 
@@ -16,14 +17,26 @@ const fetchMock = vi.fn<typeof fetch>(async (input) => {
   return jsonResponse(rawCurrentWeather);
 });
 
-async function createApp(redis?: Redis): Promise<INestApplication> {
-  let builder = Test.createTestingModule({ imports: [AppModule] });
+// Postgres stand-in for the health check: answers SELECT 1, or fails like a dead database
+const postgres = (up: boolean) => ({
+  $queryRaw: () => (up ? Promise.resolve([{ ok: 1 }]) : Promise.reject(new Error("ECONNREFUSED"))),
+  onModuleDestroy: () => Promise.resolve(),
+});
+
+async function createApp({
+  redis,
+  postgresUp = true,
+}: { redis?: Redis; postgresUp?: boolean } = {}): Promise<INestApplication> {
+  let builder = Test.createTestingModule({ imports: [AppModule] })
+    .overrideProvider(PrismaService)
+    .useValue(postgres(postgresUp));
   if (redis) builder = builder.overrideProvider(REDIS_CLIENT).useValue(redis);
   const moduleRef = await builder.compile();
   const app = configureApp(
     moduleRef.createNestApplication<NestExpressApplication>({ bufferLogs: true }),
   );
-  return app.init();
+  // Listen once so supertest reuses this server instead of opening one per request
+  return app.listen(0).then(() => app);
 }
 
 describe("Caching (no REDIS_URL: in-memory store)", () => {
@@ -84,7 +97,10 @@ describe("Caching (no REDIS_URL: in-memory store)", () => {
 
     expect(res.status).toBe(200);
     expect(res.headers["cache-control"]).toBe("no-store");
-    expect(res.body).toMatchObject({ status: "ok", checks: { redis: { status: "disabled" } } });
+    expect(res.body).toMatchObject({
+      status: "ok",
+      checks: { postgres: { status: "up" }, redis: { status: "disabled" } },
+    });
     expect(res.body.uptimeSeconds).toBeGreaterThanOrEqual(0);
   });
 
@@ -108,7 +124,7 @@ describe("Redis down (fail-open)", () => {
   beforeAll(async () => {
     Logger.overrideLogger(false);
     vi.stubGlobal("fetch", fetchMock);
-    app = await createApp(deadRedis);
+    app = await createApp({ redis: deadRedis });
   });
 
   afterAll(async () => {
@@ -128,6 +144,36 @@ describe("Redis down (fail-open)", () => {
     const res = await request(app.getHttpServer()).get("/api/health");
 
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ status: "degraded", checks: { redis: { status: "down" } } });
+    expect(res.body).toMatchObject({
+      status: "degraded",
+      checks: { postgres: { status: "up" }, redis: { status: "down" } },
+    });
+  });
+});
+
+describe("Postgres down", () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    vi.stubGlobal("fetch", fetchMock);
+    app = await createApp({ postgresUp: false });
+  });
+
+  afterAll(async () => {
+    await app.close();
+    vi.unstubAllGlobals();
+  });
+
+  it("answers 503 so uptime monitors alert", async () => {
+    const res = await request(app.getHttpServer()).get("/api/health");
+
+    expect(res.status).toBe(503);
+    expect(res.body).toMatchObject({ status: "down", checks: { postgres: { status: "down" } } });
+  });
+
+  it("still serves weather, which does not need the database", async () => {
+    const res = await request(app.getHttpServer()).get("/api/weather/current?lat=40.71&lon=-74.01");
+
+    expect(res.status).toBe(200);
   });
 });

@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd ../.. && pnpm turbo run build --filter=api",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=api && pnpm --filter api db:migrate:vercel",
   "regions": ["sin1"]
 }
