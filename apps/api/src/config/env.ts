@@ -41,6 +41,8 @@ export const envSchema = z.object({
   // so req.ip is the real client IP for rate limiting. Keep 0 when not behind a proxy,
   // otherwise clients could spoof X-Forwarded-For to dodge the limit.
   TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  // Signs access tokens (HS256). Generate with: node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+  JWT_SECRET: z.string().min(32, "must be at least 32 characters"),
   // Pooled connection used by the app (Neon: host contains "-pooler"). Migrations use
   // DATABASE_URL_UNPOOLED via prisma.config.ts, not this schema.
   DATABASE_URL: z

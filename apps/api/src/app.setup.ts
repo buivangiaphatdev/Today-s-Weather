@@ -1,5 +1,6 @@
 import { ConfigService } from "@nestjs/config";
 import type { NestExpressApplication } from "@nestjs/platform-express";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { Logger } from "nestjs-pino";
 import type { Env } from "./config/env";
@@ -12,6 +13,7 @@ export function configureApp(app: NestExpressApplication): NestExpressApplicatio
   // Behind Railway/Render, take the client IP from X-Forwarded-For (rate limiting)
   app.set("trust proxy", config.get("TRUST_PROXY", { infer: true }));
   app.use(helmet());
+  app.use(cookieParser());
   app.enableCors({
     origin: config.get("CORS_ORIGINS", { infer: true }),
     credentials: true, // refresh-token cookie in phase 2

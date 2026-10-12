@@ -133,6 +133,19 @@ Proxy tới OpenWeather: API key chỉ nằm ở server, response chỉ giữ c�
 | `GET /api/geo/reverse`      | `lat`, `lon`                       | `GeocodingResponse[]` (0 hoặc 1)                                                |
 | `GET /api/health`           |                                    | `{ status, uptimeSeconds, checks: { postgres, redis } }` (503 khi Postgres sập) |
 
+Auth (`/api/auth/*`):
+
+| Endpoint                  | Body / yêu cầu                          | Kết quả                                                                                                                                |
+| ------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/auth/register` | `{ email, password (8–128), name? }`    | 201 `AuthResponse` + cookie `rt`; 409 nếu email đã có                                                                                  |
+| `POST /api/auth/login`    | `{ email, password }`                   | 200 `AuthResponse` + cookie `rt`; 401 chung cho sai email/mật khẩu                                                                     |
+| `POST /api/auth/refresh`  | cookie `rt` + header `X-Requested-With` | 200 `AuthResponse` + cookie mới (xoay vòng); 401 `code: refresh_conflict` (tab khác vừa refresh, thử lại) hoặc `invalid_refresh_token` |
+| `POST /api/auth/logout`   | cookie `rt` + header `X-Requested-With` | 204, kết thúc phiên của thiết bị này                                                                                                   |
+
+- Access token: JWT HS256 15 phút, gửi `Authorization: Bearer`. Refresh token: ngẫu nhiên 256-bit, 30 ngày, server chỉ lưu SHA-256, cookie `HttpOnly; Secure; SameSite=None; Partitioned; Path=/api/auth`.
+- Dùng lại refresh token đã xoay vòng (sau 30 giây) → thu hồi cả phiên (nghi bị đánh cắp).
+- Rate limit login/register: 5 lần/phút/IP và 10 lần/giờ/email.
+
 Cache (Redis nếu có `REDIS_URL`, không thì bộ nhớ): current 10 phút, forecast 30 phút, geo 7 ngày; toạ độ làm tròn 2 chữ số (~1,1 km) trong key. Header `X-Cache: HIT | MISS`. Redis lỗi thì API vẫn trả lời (bỏ qua cache, đếm rate limit trong bộ nhớ) và `/api/health` báo `degraded`. Health không bị rate limit.
 
 Mã lỗi:
@@ -144,10 +157,10 @@ Mã lỗi:
 
 6. Deploy (Vercel, 2 project từ cùng repo)
 
-| Project | Root Directory | Build                                                               | Biến môi trường                                                                                                                            |
-| ------- | -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview)                                                                             |
-| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`, `REDIS_URL` (Upstash `rediss://`), `DATABASE_URL` + `DATABASE_URL_UNPOOLED` (Neon) |
+| Project | Root Directory | Build                                                               | Biến môi trường                                                                                                                                          |
+| ------- | -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview)                                                                                           |
+| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`, `REDIS_URL` (Upstash `rediss://`), `DATABASE_URL` + `DATABASE_URL_UNPOOLED` (Neon), `JWT_SECRET` |
 
 - Web gọi thẳng domain API (không rewrite qua Vercel): Vercel ghi đè `X-Forwarded-For` khi proxy, rate limit sẽ chỉ thấy 1 IP.
 - `CORS_ORIGINS` của API: domain production của web + pattern preview, ví dụ `https://today-s-weather-web.vercel.app,https://today-s-weather-*-buivangiaphats-projects.vercel.app`.
