@@ -139,11 +139,12 @@ Mã lỗi:
 
 6. Deploy (Vercel, 2 project từ cùng repo)
 
-| Project | Root Directory | Build                                                               | Biến môi trường                                                                           |
-| ------- | -------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview)                            |
-| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`, `REDIS_URL` (Upstash `rediss://`) |
+| Project | Root Directory | Build                                                               | Biến môi trường                                                                                                                            |
+| ------- | -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview)                                                                             |
+| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`, `REDIS_URL` (Upstash `rediss://`), `DATABASE_URL` + `DATABASE_URL_UNPOOLED` (Neon) |
 
 - Web gọi thẳng domain API (không rewrite qua Vercel): Vercel ghi đè `X-Forwarded-For` khi proxy, rate limit sẽ chỉ thấy 1 IP.
 - `CORS_ORIGINS` của API: domain production của web + pattern preview, ví dụ `https://today-s-weather-web.vercel.app,https://today-s-weather-*-buivangiaphats-projects.vercel.app`.
+- API chạy ở region **`sin1` (Singapore)**, gần người dùng Việt Nam (`apps/api/vercel.json`). Postgres (Neon) và Redis (Upstash) phải tạo cùng region **Singapore / `ap-southeast-1`**: mỗi query khác region tốn thêm ~200 ms.
 - Merge vào `main` → cả 2 project tự deploy production.
