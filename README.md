@@ -13,7 +13,8 @@
 - Tìm kiếm thành phố với gợi ý và lịch sử tìm kiếm.
 - Hiển thị thời tiết hiện tại: nhiệt độ, trạng thái, icon, độ ẩm, áp suất, gió.
 - Dự báo theo giờ với biểu đồ nhiệt độ.
-- Lưu / quản lý danh sách thành phố yêu thích (Favorites) lưu trên Local Storage.
+- Lưu / quản lý danh sách thành phố yêu thích (Favorites): trên máy khi chưa đăng nhập, đồng bộ theo tài khoản khi đã đăng nhập (favorites trên máy được gộp vào tài khoản ở lần đăng nhập đầu).
+- Đăng ký / đăng nhập (`/login`, `/register`); lịch sử tìm kiếm đồng bộ theo tài khoản.
 - Lấy vị trí hiện tại (Geolocation) để hiển thị thời tiết địa phương.
 - Theme toggle (Light / Dark) và lưu lựa chọn người dùng.
 - Skeleton loading và thông báo (toast) cho trạng thái fetch/ lỗi.

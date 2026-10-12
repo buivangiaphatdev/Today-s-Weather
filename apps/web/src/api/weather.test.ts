@@ -63,7 +63,7 @@ describe("weatherAPI", () => {
 
     await expect(weatherAPI.getForecast(hanoi)).rejects.toMatchObject({
       status: 502,
-      message: "Weather API error 502",
+      message: "Request failed (502)",
     });
   });
 });
