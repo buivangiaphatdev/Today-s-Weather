@@ -5,7 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import type Redis from "ioredis";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { LoggerModule } from "nestjs-pino";
-import { CookieSpikeModule } from "./auth/cookie-spike.controller";
+import { AuthModule } from "./auth/auth.module";
 import { CacheModule } from "./cache/cache.module";
 import { type Env, validateEnv } from "./config/env";
 import { GeoModule } from "./geo/geo.module";
@@ -13,7 +13,12 @@ import { HealthModule } from "./health/health.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { REDIS_CLIENT, RedisModule } from "./redis/redis.module";
 import { FailOpenThrottlerStorage } from "./throttle/fail-open-throttler-storage";
-import { BURST_LIMIT, SUSTAINED_LIMIT } from "./throttle/rate-limits";
+import {
+  AUTH_EMAIL_LIMIT,
+  AUTH_IP_LIMIT,
+  BURST_LIMIT,
+  SUSTAINED_LIMIT,
+} from "./throttle/rate-limits";
 import { WeatherModule } from "./weather/weather.module";
 
 @Module({
@@ -50,7 +55,7 @@ import { WeatherModule } from "./weather/weather.module";
     ThrottlerModule.forRootAsync({
       inject: [REDIS_CLIENT],
       useFactory: (redis: Redis | null) => ({
-        throttlers: [BURST_LIMIT, SUSTAINED_LIMIT],
+        throttlers: [BURST_LIMIT, SUSTAINED_LIMIT, AUTH_IP_LIMIT, AUTH_EMAIL_LIMIT],
         errorMessage: "Too many requests, please slow down",
         storage: new FailOpenThrottlerStorage(redis),
       }),
@@ -58,7 +63,7 @@ import { WeatherModule } from "./weather/weather.module";
     WeatherModule,
     GeoModule,
     HealthModule,
-    CookieSpikeModule, // TEMPORARY (P2-00)
+    AuthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

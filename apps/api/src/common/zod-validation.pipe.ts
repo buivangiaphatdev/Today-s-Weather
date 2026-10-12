@@ -12,7 +12,7 @@ export class ZodValidationPipe<T extends z.ZodType> implements PipeTransform<unk
       throw new BadRequestException({
         statusCode: 400,
         error: "Bad Request",
-        message: "Invalid query parameters",
+        message: "Invalid request",
         errors: z.flattenError(result.error).fieldErrors,
       });
     }

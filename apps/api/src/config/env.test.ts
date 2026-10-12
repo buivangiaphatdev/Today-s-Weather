@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { validateEnv } from "./env";
 
 const DATABASE_URL = "postgresql://weather:weather@127.0.0.1:5433/weather";
-const base = { OPENWEATHER_API_KEY: "key", DATABASE_URL };
+const JWT_SECRET = "x".repeat(32);
+const base = { OPENWEATHER_API_KEY: "key", DATABASE_URL, JWT_SECRET };
 
 describe("validateEnv", () => {
   it("applies defaults", () => {
@@ -14,6 +15,7 @@ describe("validateEnv", () => {
       OPENWEATHER_API_KEY: "key",
       TRUST_PROXY: 0,
       DATABASE_URL,
+      JWT_SECRET,
     });
   });
 
@@ -64,6 +66,10 @@ describe("validateEnv", () => {
   it("requires a Postgres DATABASE_URL", () => {
     expect(() => validateEnv({ OPENWEATHER_API_KEY: "key" })).toThrow(/DATABASE_URL/);
     expect(() => validateEnv({ ...base, DATABASE_URL: "mysql://u:p@h/db" })).toThrow(/postgres/);
+  });
+
+  it("requires a JWT_SECRET of at least 32 characters", () => {
+    expect(() => validateEnv({ ...base, JWT_SECRET: "short" })).toThrow(/JWT_SECRET/);
   });
 
   it("rejects an invalid port", () => {
