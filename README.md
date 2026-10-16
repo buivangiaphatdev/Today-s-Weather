@@ -147,6 +147,21 @@ Auth (`/api/auth/*`):
 - Dùng lại refresh token đã xoay vòng (sau 30 giây) → thu hồi cả phiên (nghi bị đánh cắp).
 - Rate limit login/register: 5 lần/phút/IP và 10 lần/giờ/email.
 
+Email và Google (`/api/auth/*`):
+
+| Endpoint                                    | Ghi chú                                                                     |
+| ------------------------------------------- | --------------------------------------------------------------------------- |
+| `POST /api/auth/verify-email`               | `{ token }` từ link email (`/verify-email#token=…`), dùng 1 lần, 24 giờ     |
+| `POST /api/auth/verify-email/resend`        | Cần đăng nhập; link mới làm link cũ hết hiệu lực                            |
+| `POST /api/auth/password/forgot`            | `{ email }` → luôn 202 (không lộ email nào có tài khoản)                    |
+| `POST /api/auth/password/reset`             | `{ token, password }` → 204, đăng xuất mọi thiết bị; link 1 giờ, dùng 1 lần |
+| `GET /api/auth/providers`                   | `{ google: boolean }`                                                       |
+| `GET /api/auth/google` → `/google/callback` | PKCE + state; về web `/auth/callback#code=…` (mã 60 giây)                   |
+| `POST /api/auth/google/exchange`            | `{ code }` + `X-Requested-With` → phiên đăng nhập + cookie                  |
+
+- Email gửi qua SMTP (`SMTP_URL`: Gmail app password hoặc Brevo). Chưa cấu hình: không gửi; môi trường development in nội dung ra log.
+- Đăng nhập Google vào email đã có tài khoản: liên kết. Nếu tài khoản đó chưa xác thực email, mật khẩu và các phiên cũ bị huỷ (chống chiếm tài khoản đăng ký trước).
+
 Dữ liệu người dùng (cần `Authorization: Bearer <accessToken>`, response `Cache-Control: private, no-store`):
 
 | Endpoint                         | Ghi chú                                                                             |
@@ -171,10 +186,10 @@ Mã lỗi:
 
 6. Deploy (Vercel, 2 project từ cùng repo)
 
-| Project | Root Directory | Build                                                               | Biến môi trường                                                                                                                                          |
-| ------- | -------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview)                                                                                           |
-| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`, `REDIS_URL` (Upstash `rediss://`), `DATABASE_URL` + `DATABASE_URL_UNPOOLED` (Neon), `JWT_SECRET` |
+| Project | Root Directory | Build                                                               | Biến môi trường                                                                                                                                                                                                                                              |
+| ------- | -------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| web     | `apps/web`     | `apps/web/vercel.json` (turbo build web + shared)                   | `VITE_API_URL` = URL production của API (Production + Preview)                                                                                                                                                                                               |
+| api     | `apps/api`     | `apps/api/vercel.json` (turbo build api + shared), framework NestJS | `OPENWEATHER_API_KEY`, `CORS_ORIGINS`, `TRUST_PROXY=1`, `REDIS_URL` (Upstash `rediss://`), `DATABASE_URL` + `DATABASE_URL_UNPOOLED` (Neon), `JWT_SECRET`, tuỳ chọn: `SMTP_URL` + `MAIL_FROM`, `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `API_PUBLIC_URL` |
 
 - Web gọi thẳng domain API (không rewrite qua Vercel): Vercel ghi đè `X-Forwarded-For` khi proxy, rate limit sẽ chỉ thấy 1 IP.
 - `CORS_ORIGINS` của API: domain production của web + pattern preview, ví dụ `https://today-s-weather-web.vercel.app,https://today-s-weather-*-buivangiaphats-projects.vercel.app`.

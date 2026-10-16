@@ -1,6 +1,8 @@
 import { ArrowDown, ArrowUp, Droplets, Wind } from "lucide-react";
 import type { GeocodingResponse, WeatherData } from "../api/types";
 import { Card, CardContent } from "./ui/card";
+import { useAuth } from "../context/auth-provider";
+import { formatTemperature, formatWindSpeed } from "../lib/units";
 
 interface CurrentWeatherProps {
   data: WeatherData;
@@ -13,7 +15,8 @@ const CurrentWeather = ({ data, locationName }: CurrentWeatherProps) => {
     wind: { speed },
   } = data;
 
-  const formatTemp = (temp: number) => `${Math.round(temp)}°C`;
+  const { units } = useAuth().settings;
+  const formatTemp = (temp: number) => formatTemperature(temp, units);
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-6">
@@ -58,7 +61,7 @@ const CurrentWeather = ({ data, locationName }: CurrentWeatherProps) => {
                 <Wind className="h-4 w-4 text-blue-500" />
                 <div className="space-y-0.5">
                   <p className="text-sm font-medium">Wind Speed</p>
-                  <p className="text-sm text-muted-foreground">{speed} m/s</p>
+                  <p className="text-sm text-muted-foreground">{formatWindSpeed(speed, units)}</p>
                 </div>
               </div>
             </div>

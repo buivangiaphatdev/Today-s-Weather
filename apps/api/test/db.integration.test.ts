@@ -32,6 +32,8 @@ describe.skipIf(!testDatabaseUrl)("with a real Postgres", () => {
       ORDER BY table_name`;
     expect(tables.map((t) => t.table_name)).toEqual([
       "favorite_cities",
+      "oauth_accounts",
+      "one_time_tokens",
       "refresh_tokens",
       "search_history",
       "users",

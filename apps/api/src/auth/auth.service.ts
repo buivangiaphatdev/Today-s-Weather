@@ -12,6 +12,10 @@ export interface AuthResult {
   refreshToken: string;
 }
 
+export interface RegisterResult extends AuthResult {
+  user: User;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -23,7 +27,7 @@ export class AuthService {
   async register(
     { email, password, name }: RegisterInput,
     userAgent?: string,
-  ): Promise<AuthResult> {
+  ): Promise<RegisterResult> {
     const passwordHash = await this.passwords.hash(password);
     const user = await this.prisma.user
       .create({ data: { email, passwordHash, name } })
@@ -33,6 +37,13 @@ export class AuthService {
         }
         throw error;
       });
+    const result = await this.signIn(user, await this.tokens.issueRefreshToken(user.id, userAgent));
+    return { ...result, user };
+  }
+
+  // New session for a user already authenticated another way (Google sign-in)
+  async signInUser(userId: string, userAgent?: string): Promise<AuthResult> {
+    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
     return this.signIn(user, await this.tokens.issueRefreshToken(user.id, userAgent));
   }
 

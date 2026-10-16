@@ -2,6 +2,8 @@ import type { ForecastData } from "../api/types";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format } from "date-fns";
+import { useAuth } from "../context/auth-provider";
+import { toDisplayTemperature } from "../lib/units";
 interface HourlyTemperatureProps {
   data: ForecastData;
 }
@@ -13,14 +15,15 @@ interface ChartData {
 }
 
 export function HourlyTemperature({ data }: HourlyTemperatureProps) {
+  const { units } = useAuth().settings;
   // Get today's forecast data and format for chart
 
   const chartData: ChartData[] = data.list
     .slice(0, 8) // Get next 24 hours (3-hour intervals)
     .map((item) => ({
       time: format(new Date(item.dt * 1000), "ha"),
-      temp: Math.round(item.main.temp),
-      feels_like: Math.round(item.main.feels_like),
+      temp: toDisplayTemperature(item.main.temp, units),
+      feels_like: toDisplayTemperature(item.main.feels_like, units),
     }));
 
   return (

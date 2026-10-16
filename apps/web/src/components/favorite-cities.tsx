@@ -6,6 +6,8 @@ import { Button } from "./ui/button";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useWeatherQuery } from "../hooks/use-weather";
+import { useAuth } from "../context/auth-provider";
+import { formatTemperature } from "../lib/units";
 
 interface FavoriteCityTabletProps {
   id: string;
@@ -16,6 +18,7 @@ interface FavoriteCityTabletProps {
 }
 
 function FavoriteCityTablet({ id, name, lat, lon, onRemove }: FavoriteCityTabletProps) {
+  const { units } = useAuth().settings;
   const navigate = useNavigate();
   const { data: weather, isLoading } = useWeatherQuery({ lat, lon });
 
@@ -61,7 +64,9 @@ function FavoriteCityTablet({ id, name, lat, lon, onRemove }: FavoriteCityTablet
             </div>
           </div>
           <div className="ml-auto text-right">
-            <p className="text-xl font-bold">{Math.round(weather.main.temp)}°</p>
+            <p className="text-xl font-bold">
+              {formatTemperature(weather.main.temp, units, false)}
+            </p>
             <p className="text-xs text-muted-foreground capitalize">
               {weather.weather[0].description}
             </p>
