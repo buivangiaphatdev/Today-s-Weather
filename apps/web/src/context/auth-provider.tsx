@@ -1,12 +1,24 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { authApi } from "../api/account";
+import { authApi, settingsApi } from "../api/account";
 import { getSession, onSessionChange, refreshSession } from "../api/http";
-import type { LoginInput, RegisterInput, UserProfile } from "../api/types";
+import type { LoginInput, RegisterInput, Settings, UserProfile } from "../api/types";
 import { importLocalFavorites } from "../hooks/use-favorite";
 
 type AuthStatus = "loading" | "signed-in" | "signed-out";
+
+// Signed out, settings live on this device; signed in, in the account (all devices)
+const SETTINGS_KEY = "settings";
+const DEFAULT_SETTINGS: Settings = { units: "metric", language: "vi", theme: "system" };
+
+function readLocalSettings(): Settings {
+  try {
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "{}") };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
 
 interface AuthState {
   status: AuthStatus;
@@ -14,6 +26,8 @@ interface AuthState {
   login: (input: LoginInput) => Promise<UserProfile>;
   register: (input: RegisterInput) => Promise<UserProfile>;
   logout: () => Promise<void>;
+  settings: Settings;
+  updateSettings: (patch: Partial<Settings>) => Promise<void>;
 }
 
 // Without a provider (e.g. in unit tests) everything behaves as signed out
@@ -23,12 +37,15 @@ const AuthContext = createContext<AuthState>({
   login: () => Promise.reject(new Error("AuthProvider missing")),
   register: () => Promise.reject(new Error("AuthProvider missing")),
   logout: () => Promise.resolve(),
+  settings: DEFAULT_SETTINGS,
+  updateSettings: () => Promise.resolve(),
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AuthStatus>(getSession() ? "signed-in" : "loading");
   const [user, setUser] = useState<UserProfile | null>(getSession()?.user ?? null);
+  const [localSettings, setLocalSettings] = useState<Settings>(readLocalSettings);
 
   useEffect(() => {
     const unsubscribe = onSessionChange((session) => {
@@ -69,6 +86,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login: async (input) => (await authApi.login(input)).user,
     register: async (input) => (await authApi.register(input)).user,
     logout: () => authApi.logout(),
+    settings: user?.settings ?? localSettings,
+    updateSettings: async (patch) => {
+      if (status === "signed-in") {
+        const saved = await settingsApi.update(patch);
+        setUser((current) => current && { ...current, settings: saved });
+        return;
+      }
+      const next = { ...localSettings, ...patch };
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+      setLocalSettings(next);
+    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

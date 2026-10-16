@@ -3,11 +3,14 @@ import { Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { authApi } from "../api/account";
 import { ApiError } from "../api/http";
+import { useHashParam } from "../hooks/use-hash-param";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { Input, Label } from "../components/ui/input";
+import { Field } from "../components/form-field";
 import { useAuth } from "../context/auth-provider";
 
 type Mode = "login" | "register";
@@ -42,7 +45,16 @@ export default function AuthPage({ mode }: { mode: Mode }) {
   const { status, login, register } = useAuth();
   const navigate = useNavigate();
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [formError, setFormError] = useState<string | null>(null);
+  // Google redirects back here with #error=google when sign-in did not complete
+  const googleError = useHashParam("error");
+  const [formError, setFormError] = useState<string | null>(
+    googleError ? "Google sign-in did not complete. Please try again." : null,
+  );
+  const { data: providers } = useQuery({
+    queryKey: ["auth-providers"],
+    queryFn: authApi.providers,
+    staleTime: Infinity,
+  });
   const [submitting, setSubmitting] = useState(false);
   const text = copy[mode];
 
@@ -110,6 +122,14 @@ export default function AuthPage({ mode }: { mode: Mode }) {
             error={fieldErrors.password}
             hint={mode === "register" ? "At least 8 characters" : undefined}
           />
+          {mode === "login" && (
+            <Link
+              to="/forgot-password"
+              className="-mt-2 block text-right text-sm text-primary underline-offset-4 hover:underline"
+            >
+              Forgot password?
+            </Link>
+          )}
 
           {formError && (
             <Alert variant="destructive">
@@ -121,6 +141,12 @@ export default function AuthPage({ mode }: { mode: Mode }) {
             {submitting && <Loader2 className="animate-spin" />}
             {text.submit}
           </Button>
+          {providers?.google && (
+            <Button asChild type="button" variant="outline" className="w-full">
+              {/* Full-page navigation: the API redirects to Google and back */}
+              <a href={authApi.googleSignInUrl()}>Continue with Google</a>
+            </Button>
+          )}
           <p className="text-center text-sm text-muted-foreground">
             {text.switchText}{" "}
             <Link
@@ -133,43 +159,5 @@ export default function AuthPage({ mode }: { mode: Mode }) {
         </form>
       </CardContent>
     </Card>
-  );
-}
-
-function Field({
-  label,
-  name,
-  error,
-  hint,
-  ...input
-}: {
-  label: string;
-  name: string;
-  error?: string;
-  hint?: string;
-} & React.ComponentProps<"input">) {
-  const describedBy = error ? `${name}-error` : hint ? `${name}-hint` : undefined;
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={name}>{label}</Label>
-      <Input
-        id={name}
-        name={name}
-        aria-invalid={!!error}
-        aria-describedby={describedBy}
-        {...input}
-      />
-      {error ? (
-        <p id={`${name}-error`} className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : (
-        hint && (
-          <p id={`${name}-hint`} className="text-xs text-muted-foreground">
-            {hint}
-          </p>
-        )
-      )}
-    </div>
   );
 }

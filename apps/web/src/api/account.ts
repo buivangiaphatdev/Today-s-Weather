@@ -1,4 +1,5 @@
 import type {
+  AuthProviders,
   AuthResponse,
   FavoriteCity,
   FavoriteInput,
@@ -9,7 +10,24 @@ import type {
   Settings,
   UpdateSettingsInput,
 } from "./types";
+import { API_BASE_URL } from "./config";
 import { apiFetch, authFetch, setSession, toApiError } from "./http";
+
+async function postAuth(path: string, body?: unknown): Promise<Response> {
+  const response = await authFetch(path, {
+    method: "POST",
+    headers: body === undefined ? {} : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!response.ok) throw await toApiError(response);
+  return response;
+}
+
+async function startSession(response: Response) {
+  const session = (await response.json()) as AuthResponse;
+  setSession(session);
+  return session;
+}
 
 async function signIn(path: "/login" | "/register", input: LoginInput | RegisterInput) {
   const response = await authFetch(path, {
@@ -31,6 +49,19 @@ export const authApi = {
     await authFetch("/logout", { method: "POST" }).catch(() => undefined);
     setSession(null);
   },
+  providers: async (): Promise<AuthProviders> => {
+    const response = await authFetch("/providers");
+    return response.ok ? response.json() : { google: false };
+  },
+  // Full-page navigation to Google (via the API), not a fetch
+  googleSignInUrl: () => `${API_BASE_URL}/api/auth/google`,
+  googleExchange: async (code: string) =>
+    startSession(await postAuth("/google/exchange", { code })),
+  verifyEmail: async (token: string) => void (await postAuth("/verify-email", { token })),
+  resendVerification: () => apiFetch<void>("/auth/verify-email/resend", { method: "POST" }),
+  forgotPassword: async (email: string) => void (await postAuth("/password/forgot", { email })),
+  resetPassword: async (token: string, password: string) =>
+    void (await postAuth("/password/reset", { token, password })),
 };
 
 export const favoritesApi = {

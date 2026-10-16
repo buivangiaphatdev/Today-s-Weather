@@ -30,3 +30,23 @@ export interface AuthResponse {
   expiresIn: number;
   user: UserProfile;
 }
+
+// Secrets from email links and the Google hand-off (base64url, 43 chars when issued)
+const oneTimeToken = z.string().min(20).max(200);
+
+export const verifyEmailSchema = z.object({ token: oneTimeToken });
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({ token: oneTimeToken, password: passwordSchema });
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const oauthExchangeSchema = z.object({ code: oneTimeToken });
+export type OAuthExchangeInput = z.infer<typeof oauthExchangeSchema>;
+
+// GET /api/auth/providers: which sign-in methods the API has configured
+export interface AuthProviders {
+  google: boolean;
+}

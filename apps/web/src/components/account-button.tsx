@@ -1,4 +1,4 @@
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "../context/auth-provider";
@@ -10,14 +10,25 @@ export function AccountButton() {
 
   if (status === "loading") return null;
 
+  const settingsLink = (
+    <Button asChild variant="outline" size="icon" aria-label="Settings" title="Settings">
+      <Link to="/settings">
+        <Settings />
+      </Link>
+    </Button>
+  );
+
   if (status === "signed-out" || !user) {
     return (
-      <Button asChild variant="outline">
-        <Link to="/login">
-          <LogIn />
-          <span className="hidden sm:inline">Sign in</span>
-        </Link>
-      </Button>
+      <div className="flex items-center gap-2">
+        {settingsLink}
+        <Button asChild variant="outline">
+          <Link to="/login">
+            <LogIn />
+            <span className="hidden sm:inline">Sign in</span>
+          </Link>
+        </Button>
+      </div>
     );
   }
 
@@ -28,6 +39,7 @@ export function AccountButton() {
 
   return (
     <div className="flex items-center gap-2">
+      {settingsLink}
       <span
         className="hidden max-w-40 truncate text-sm text-muted-foreground md:inline"
         title={user.email}

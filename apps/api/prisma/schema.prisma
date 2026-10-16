@@ -40,6 +40,8 @@ model User {
   favorites     FavoriteCity[]
   searchHistory SearchHistory[]
   refreshTokens RefreshToken[]
+  oneTimeTokens OneTimeToken[]
+  oauthAccounts OAuthAccount[]
 
   @@map("users")
 }
@@ -101,4 +103,43 @@ model RefreshToken {
   @@index([userId])
   @@index([familyId])
   @@map("refresh_tokens")
+}
+
+enum OneTimeTokenPurpose {
+  verify_email // link in the verification email, 24 h
+  reset_password // link in the password reset email, 1 h
+  oauth_login // handed to the web after Google sign-in, exchanged for a session, 60 s
+}
+
+// Single-use secrets sent to the user (email links, OAuth hand-off). Like refresh
+// tokens, only the SHA-256 is stored; usedAt makes them single use.
+model OneTimeToken {
+  id        String              @id @default(uuid(7)) @db.Uuid
+  userId    String              @db.Uuid
+  purpose   OneTimeTokenPurpose
+  tokenHash String              @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("one_time_tokens")
+}
+
+// External sign-in identities (P2-04: Google). providerAccountId is Google's stable
+// "sub", never the email (which can change).
+model OAuthAccount {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  userId            String   @db.Uuid
+  provider          String   @db.VarChar(20)
+  providerAccountId String   @db.VarChar(255)
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
 }

@@ -16,6 +16,8 @@ describe("validateEnv", () => {
       TRUST_PROXY: 0,
       DATABASE_URL,
       JWT_SECRET,
+      MAIL_FROM: "Today's Weather <no-reply@todays-weather.local>",
+      WEB_URL: "http://localhost:5173",
     });
   });
 
@@ -70,6 +72,34 @@ describe("validateEnv", () => {
 
   it("requires a JWT_SECRET of at least 32 characters", () => {
     expect(() => validateEnv({ ...base, JWT_SECRET: "short" })).toThrow(/JWT_SECRET/);
+  });
+
+  it("uses the first plain CORS origin as WEB_URL unless set", () => {
+    const origins =
+      "https://today-s-weather-*-team.vercel.app,https://today-s-weather-web.vercel.app";
+    expect(validateEnv({ ...base, CORS_ORIGINS: origins }).WEB_URL).toBe(
+      "https://today-s-weather-web.vercel.app",
+    );
+    expect(validateEnv({ ...base, WEB_URL: "https://web.example.com" }).WEB_URL).toBe(
+      "https://web.example.com",
+    );
+  });
+
+  it("requires the Google secret and public API URL once Google sign-in is enabled", () => {
+    expect(() => validateEnv({ ...base, GOOGLE_CLIENT_ID: "id" })).toThrow(/GOOGLE_CLIENT_SECRET/);
+    expect(
+      validateEnv({
+        ...base,
+        GOOGLE_CLIENT_ID: "id",
+        GOOGLE_CLIENT_SECRET: "secret",
+        API_PUBLIC_URL: "https://api.example.com",
+      }).GOOGLE_CLIENT_ID,
+    ).toBe("id");
+  });
+
+  it("accepts only smtp(s) URLs for email", () => {
+    expect(validateEnv({ ...base, SMTP_URL: "" }).SMTP_URL).toBeUndefined();
+    expect(() => validateEnv({ ...base, SMTP_URL: "https://mail" })).toThrow(/SMTP_URL/);
   });
 
   it("rejects an invalid port", () => {

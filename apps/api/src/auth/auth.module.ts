@@ -3,7 +3,13 @@ import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import type { Env } from "../config/env";
 import { ACCESS_TOKEN_TTL_SECONDS, JWT_AUDIENCE, JWT_ISSUER } from "./auth.constants";
+import { MailService } from "../mail/mail.service";
+import { AccountEmailController } from "./account-email.controller";
+import { AccountEmailService } from "./account-email.service";
 import { AuthController } from "./auth.controller";
+import { GoogleController } from "./google.controller";
+import { GoogleService } from "./google.service";
+import { OneTimeTokenService } from "./one-time-token.service";
 import { AuthService } from "./auth.service";
 import { AccessTokenGuard } from "./guards";
 import { PasswordService } from "./password.service";
@@ -28,8 +34,17 @@ import { TokenService } from "./token.service";
       }),
     }),
   ],
-  controllers: [AuthController],
-  providers: [AuthService, PasswordService, TokenService, AccessTokenGuard],
+  controllers: [AuthController, AccountEmailController, GoogleController],
+  providers: [
+    AuthService,
+    PasswordService,
+    TokenService,
+    AccessTokenGuard,
+    OneTimeTokenService,
+    AccountEmailService,
+    GoogleService,
+    MailService,
+  ],
   exports: [AccessTokenGuard, JwtModule],
 })
 export class AuthModule {}

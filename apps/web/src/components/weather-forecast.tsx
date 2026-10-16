@@ -2,6 +2,8 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ArrowDown, ArrowUp, Droplets, Wind } from "lucide-react";
 import type { ForecastData } from "../api/types";
+import { useAuth } from "../context/auth-provider";
+import { formatTemperature, formatWindSpeed } from "../lib/units";
 
 interface WeatherForecastProps {
   data: ForecastData;
@@ -48,7 +50,8 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
   const nextDays = Object.values(dailyForecasts).slice(1, 6);
 
   // Format temperature
-  const formatTemp = (temp: number) => `${Math.round(temp)}°`;
+  const { units } = useAuth().settings;
+  const formatTemp = (temp: number) => formatTemperature(temp, units, false);
 
   return (
     <Card>
@@ -87,7 +90,7 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
                 </span>
                 <span className="flex items-center gap-1">
                   <Wind className="h-4 w-4 text-blue-500" />
-                  <span className="text-sm">{day.wind}m/s</span>
+                  <span className="text-sm">{formatWindSpeed(day.wind, units)}</span>
                 </span>
               </div>
             </div>
