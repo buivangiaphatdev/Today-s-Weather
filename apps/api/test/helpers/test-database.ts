@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import type { ConfigService } from "@nestjs/config";
 import type { Env } from "../../src/config/env";
+import { settleBackgroundWork } from "../../src/common/background";
 import { PrismaService } from "../../src/prisma/prisma.service";
 
 // Real-Postgres suites opt in with DATABASE_TEST_URL (CI provides one; locally
@@ -29,5 +30,9 @@ export function connectTestDatabase(): PrismaService {
   return new PrismaService({ get: () => url } as unknown as ConfigService<Env, true>);
 }
 
-export const truncateAll = (prisma: PrismaService) =>
-  prisma.$executeRaw`TRUNCATE TABLE users CASCADE`;
+// Waits for background writes first (e.g. the verification email token issued after
+// sign-up): truncating while they run deadlocks
+export async function truncateAll(prisma: PrismaService) {
+  await settleBackgroundWork();
+  await prisma.$executeRaw`TRUNCATE TABLE users CASCADE`;
+}
